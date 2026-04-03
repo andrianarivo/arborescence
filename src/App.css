@@ -38,11 +38,22 @@ body {
 }
 
 .app.with-terminal {
-	grid-template-rows: 1fr 300px;
+	grid-template-rows: 1fr 4px 300px;
 }
 
+.app.with-terminal .resize-handle,
 .app.with-terminal .terminal-panel {
 	grid-column: 1 / -1;
+}
+
+.resize-handle {
+	background: var(--border);
+	cursor: row-resize;
+	transition: background 0.15s;
+}
+
+.resize-handle:hover {
+	background: var(--accent);
 }
 
 .panel-header {
