@@ -53,7 +53,9 @@ fn openpty_and_spawn(
             std::env::set_var("LANG", "en_US.UTF-8");
 
             let shell_c = std::ffi::CString::new(shell.as_str()).unwrap();
-            let args = [shell_c.as_ptr(), std::ptr::null()];
+            let basename = shell.rsplit('/').next().unwrap_or(&shell);
+            let login_arg0 = std::ffi::CString::new(format!("-{}", basename)).unwrap();
+            let args = [login_arg0.as_ptr(), std::ptr::null()];
             unsafe { libc::execvp(shell_c.as_ptr(), args.as_ptr()) };
             std::process::exit(1);
         }

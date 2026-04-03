@@ -6,6 +6,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import '@xterm/xterm/css/xterm.css';
 import { useAppStore } from '../store/appStore';
+import { loadKeybindings, matchKeybinding } from '../lib/keybindings';
 
 type PtyOutput = {
 	session_id: string;
@@ -116,6 +117,18 @@ export function Terminal() {
 
 			xterm.onData((data) => {
 				invoke('write_pty', { sessionId, data });
+			});
+
+			const bindings = await loadKeybindings();
+			xterm.attachCustomKeyEventHandler((event: KeyboardEvent): boolean => {
+				if (event.type !== 'keydown') return true;
+				const data = matchKeybinding(event, bindings);
+				if (data) {
+					event.preventDefault();
+					invoke('write_pty', { sessionId, data });
+					return false;
+				}
+				return true;
 			});
 
 			sessionsMap.set(sessionId, { xterm, fitAddon, unlisten });
