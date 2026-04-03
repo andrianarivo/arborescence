@@ -309,6 +309,70 @@ body {
 	background: var(--bg-secondary);
 }
 
+.terminal-header {
+	padding: 0;
+	border-bottom: 1px solid var(--border);
+}
+
+.terminal-tabs {
+	display: flex;
+	align-items: center;
+	overflow-x: auto;
+}
+
+.terminal-tab {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 12px;
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--text-secondary);
+	cursor: pointer;
+	border-right: 1px solid var(--border);
+	transition: background 0.15s;
+	user-select: none;
+}
+
+.terminal-tab:hover {
+	background: var(--bg-tertiary);
+}
+
+.terminal-tab.active {
+	color: var(--text-primary);
+	background: var(--bg-primary);
+}
+
+.terminal-tab-close {
+	background: none;
+	border: none;
+	color: var(--text-secondary);
+	font-size: 13px;
+	cursor: pointer;
+	padding: 0 2px;
+	border-radius: 3px;
+	line-height: 1;
+}
+
+.terminal-tab-close:hover {
+	color: var(--danger);
+	background: rgba(231, 76, 60, 0.1);
+}
+
+.terminal-tab-add {
+	background: none;
+	border: none;
+	color: var(--text-secondary);
+	font-size: 15px;
+	cursor: pointer;
+	padding: 6px 12px;
+	transition: color 0.15s;
+}
+
+.terminal-tab-add:hover {
+	color: var(--accent);
+}
+
 .terminal-container {
 	flex: 1;
 	padding: 4px;

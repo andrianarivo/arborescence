@@ -15,13 +15,15 @@ type PtyOutput = {
 type Session = {
 	xterm: XTerm;
 	fitAddon: FitAddon;
-	sessionId: string;
 	unlisten: UnlistenFn;
 };
 
 const sessionsMap = new Map<string, Session>();
 
-function createXTerm(container: HTMLElement): { xterm: XTerm; fitAddon: FitAddon } {
+function createXTerm(container: HTMLElement): {
+	xterm: XTerm;
+	fitAddon: FitAddon;
+} {
 	const xterm = new XTerm({
 		allowProposedApi: true,
 		cursorBlink: true,
@@ -46,47 +48,53 @@ function createXTerm(container: HTMLElement): { xterm: XTerm; fitAddon: FitAddon
 
 export function Terminal() {
 	const selectedWorktree = useAppStore((s) => s.selectedWorktree);
+	const ptySessions = useAppStore((s) => s.ptySessions);
+	const activeTab = useAppStore((s) => s.activeTab);
 	const containerRef = useRef<HTMLDivElement>(null);
-	const activePathRef = useRef<string | null>(null);
+	const activeSessionRef = useRef<string | null>(null);
 
-	const activateSession = useCallback(async (path: string) => {
-		const container = containerRef.current;
-		console.log('[Terminal] activateSession', { path, container: !!container });
-		if (!container) return;
+	const path = selectedWorktree?.path;
+	const tabs = path ? ptySessions[path] || [] : [];
+	const tabIndex = path ? (activeTab[path] ?? 0) : 0;
+	const activeSessionId = tabs[tabIndex] || null;
 
-		// detach previous
-		const prevPath = activePathRef.current;
-		if (prevPath && prevPath !== path) {
-			const prev = sessionsMap.get(prevPath);
-			if (prev?.xterm.element?.parentElement) {
-				prev.xterm.element.remove();
-			}
+	const detachCurrent = useCallback(() => {
+		const prev = activeSessionRef.current;
+		if (!prev) return;
+		const session = sessionsMap.get(prev);
+		if (session?.xterm.element?.parentElement) {
+			session.xterm.element.remove();
 		}
-		activePathRef.current = path;
+		activeSessionRef.current = null;
+	}, []);
 
-		// reattach existing
-		const existing = sessionsMap.get(path);
-		console.log('[Terminal] existing session?', !!existing);
-		if (existing) {
-			container.appendChild(existing.xterm.element!);
-			existing.fitAddon.fit();
-			const d = existing.fitAddon.proposeDimensions();
+	const attachSession = useCallback(
+		(sessionId: string) => {
+			const container = containerRef.current;
+			if (!container) return;
+			detachCurrent();
+
+			const session = sessionsMap.get(sessionId);
+			if (!session) return;
+
+			container.appendChild(session.xterm.element!);
+			session.fitAddon.fit();
+			const d = session.fitAddon.proposeDimensions();
 			if (d) {
-				invoke('resize_pty', {
-					sessionId: existing.sessionId,
-					cols: d.cols,
-					rows: d.rows,
-				});
+				invoke('resize_pty', { sessionId, cols: d.cols, rows: d.rows });
 			}
-			existing.xterm.focus();
-			return;
-		}
+			session.xterm.focus();
+			activeSessionRef.current = sessionId;
+		},
+		[detachCurrent],
+	);
 
-		// create new
-		console.log('[Terminal] creating new session for', path);
+	const createNewTab = useCallback(async () => {
+		if (!path || !containerRef.current) return;
+		detachCurrent();
+
 		try {
-			const { xterm, fitAddon } = createXTerm(container);
-			console.log('[Terminal] xterm created, calling create_pty');
+			const { xterm, fitAddon } = createXTerm(containerRef.current);
 			const dims = fitAddon.proposeDimensions();
 			const cols = dims?.cols ?? 80;
 			const rows = dims?.rows ?? 24;
@@ -110,71 +118,108 @@ export function Terminal() {
 				invoke('write_pty', { sessionId, data });
 			});
 
-			sessionsMap.set(path, { xterm, fitAddon, sessionId, unlisten });
+			sessionsMap.set(sessionId, { xterm, fitAddon, unlisten });
 			useAppStore.getState().registerPty(path, sessionId);
-			console.log('[Terminal] session ready', sessionId);
+			activeSessionRef.current = sessionId;
 			xterm.focus();
 		} catch (err) {
 			console.error('Failed to create PTY session:', err);
 		}
-	}, []);
+	}, [path, detachCurrent]);
 
+	const closeTab = useCallback(
+		async (sessionId: string) => {
+			if (!path) return;
+			const session = sessionsMap.get(sessionId);
+			if (session) {
+				session.unlisten();
+				session.xterm.dispose();
+				await invoke('kill_pty', { sessionId });
+				sessionsMap.delete(sessionId);
+			}
+			useAppStore.getState().unregisterPty(path, sessionId);
+
+			const state = useAppStore.getState();
+			const remaining = state.ptySessions[path];
+			if (!remaining || remaining.length === 0) {
+				activeSessionRef.current = null;
+				useAppStore.getState().selectWorktree(null);
+			}
+		},
+		[path],
+	);
+
+	// Auto-create first tab when selecting a worktree with no tabs
 	useEffect(() => {
-		const path = selectedWorktree?.path;
-		console.log('[Terminal] useEffect path =', path, 'containerRef =', !!containerRef.current);
 		if (!path) return;
-		activateSession(path);
-	}, [selectedWorktree?.path, activateSession]);
+		if (tabs.length === 0) {
+			createNewTab();
+		}
+	}, [path, tabs.length, createNewTab]);
 
+	// Attach active tab when it changes
+	useEffect(() => {
+		if (!activeSessionId) return;
+		if (activeSessionRef.current === activeSessionId) return;
+		attachSession(activeSessionId);
+	}, [activeSessionId, attachSession]);
+
+	// ResizeObserver
 	useEffect(() => {
 		const container = containerRef.current;
 		if (!container) return;
 
 		const observer = new ResizeObserver(() => {
-			const path = activePathRef.current;
-			if (!path) return;
-			const session = sessionsMap.get(path);
+			const sid = activeSessionRef.current;
+			if (!sid) return;
+			const session = sessionsMap.get(sid);
 			if (!session) return;
 			session.fitAddon.fit();
 			const d = session.fitAddon.proposeDimensions();
 			if (d) {
-				invoke('resize_pty', {
-					sessionId: session.sessionId,
-					cols: d.cols,
-					rows: d.rows,
-				});
+				invoke('resize_pty', { sessionId: sid, cols: d.cols, rows: d.rows });
 			}
 		});
 		observer.observe(container);
 		return () => observer.disconnect();
 	}, []);
 
-	const handleClose = useCallback(async () => {
-		const path = activePathRef.current;
-		if (!path) return;
-		const session = sessionsMap.get(path);
-		if (session) {
-			session.unlisten();
-			session.xterm.dispose();
-			await invoke('kill_pty', { sessionId: session.sessionId });
-			sessionsMap.delete(path);
-			useAppStore.getState().unregisterPty(path);
-		}
-		activePathRef.current = null;
-		useAppStore.getState().selectWorktree(null);
-	}, []);
-
 	if (!selectedWorktree) {
-		return <div className="terminal-panel" style={{ display: 'none' }} ref={containerRef} />;
+		return (
+			<div
+				className="terminal-panel"
+				style={{ display: 'none' }}
+				ref={containerRef}
+			/>
+		);
 	}
 
 	return (
 		<div className="terminal-panel">
-			<div className="panel-header">
-				<span>TERMINAL — {selectedWorktree.name}</span>
-				<button className="btn-close" onClick={handleClose}>
-					×
-				</button>
+			<div className="panel-header terminal-header">
+				<div className="terminal-tabs">
+					{tabs.map((sid, i) => (
+						<div
+							key={sid}
+							className={`terminal-tab ${i === tabIndex ? 'active' : ''}`}
+							onClick={() => useAppStore.getState().setActiveTab(path!, i)}
+						>
+							<span>Terminal {i + 1}</span>
+							<button
+								className="terminal-tab-close"
+								onClick={(e) => {
+									e.stopPropagation();
+									closeTab(sid);
+								}}
+							>
+								×
+							</button>
+						</div>
+					))}
+					<button className="terminal-tab-add" onClick={createNewTab}>
+						+
+					</button>
+				</div>
 			</div>
 			<div className="terminal-container" ref={containerRef} />
 		</div>
