@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { open } from '@tauri-apps/plugin-dialog';
 import { useConfig } from '../hooks/useConfig';
 
 type Props = {
@@ -12,8 +13,14 @@ export function AddRepoModal({ onClose }: Props) {
 	const [loading, setLoading] = useState(false);
 	const { addRepo } = useConfig();
 
+	const handleBrowse = async () => {
+		const selected = await open({ directory: true, multiple: false });
+		if (selected) setPath(selected);
+	};
+
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+		if (!path) return;
 		setError('');
 		setLoading(true);
 
@@ -38,13 +45,18 @@ export function AddRepoModal({ onClose }: Props) {
 			<div className="modal" onClick={(e) => e.stopPropagation()}>
 				<h3>Ajouter un repo</h3>
 				<form onSubmit={handleSubmit}>
-					<input
-						type="text"
-						value={path}
-						onChange={(e) => setPath(e.target.value)}
-						placeholder="/chemin/vers/le/repo"
-						autoFocus
-					/>
+					<div className="folder-picker">
+						<input
+							type="text"
+							value={path}
+							readOnly
+							placeholder="Aucun dossier selectionne"
+							onClick={handleBrowse}
+						/>
+						<button type="button" className="btn-secondary" onClick={handleBrowse}>
+							Parcourir
+						</button>
+					</div>
 					{error && <p className="error">{error}</p>}
 					<div className="modal-actions">
 						<button type="button" className="btn-secondary" onClick={onClose}>

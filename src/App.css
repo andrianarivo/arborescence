@@ -221,6 +221,18 @@ body {
 	margin-bottom: 8px;
 }
 
+.folder-picker {
+	display: flex;
+	gap: 8px;
+	margin-bottom: 8px;
+}
+
+.folder-picker input {
+	flex: 1;
+	cursor: pointer;
+	margin-bottom: 0;
+}
+
 .modal input:focus {
 	border-color: var(--accent);
 }
