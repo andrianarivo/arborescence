@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useAppStore } from '../store/appStore';
 import { useWorktrees } from '../hooks/useWorktrees';
-import { useTerminal } from '../hooks/useTerminal';
 import { NewWorktreeModal } from './NewWorktreeModal';
 import { ConfirmDialog } from './ConfirmDialog';
 import type { Worktree } from '../types';
@@ -21,7 +20,6 @@ export function WorktreeList() {
 	const { selectedRepo, worktrees, selectedWorktree, selectWorktree } =
 		useAppStore();
 	const { deleteWorktree, checkUnpushed } = useWorktrees();
-	const { openTerminal } = useTerminal();
 	const [showNewModal, setShowNewModal] = useState(false);
 	const [wtToDelete, setWtToDelete] = useState<Worktree | null>(null);
 	const [unpushedCommits, setUnpushedCommits] = useState<string[]>([]);
@@ -37,13 +35,8 @@ export function WorktreeList() {
 		);
 	}
 
-	const handleSelect = (wt: Worktree) => {
-		selectWorktree(wt);
-	};
-
 	const handleOpenTerminal = (wt: Worktree) => {
 		selectWorktree(wt);
-		openTerminal(wt.path, 80, 24, () => {});
 	};
 
 	const handleDeleteRequest = async (wt: Worktree) => {
@@ -72,7 +65,7 @@ export function WorktreeList() {
 					<div
 						key={wt.path}
 						className={`list-item worktree-item ${selectedWorktree?.path === wt.path ? 'active' : ''}`}
-						onClick={() => handleSelect(wt)}
+						onClick={() => handleOpenTerminal(wt)}
 						onDoubleClick={() => handleOpenTerminal(wt)}
 					>
 						<div className="worktree-info">

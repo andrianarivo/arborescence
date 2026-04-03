@@ -11,62 +11,86 @@ type PtyOutput = {
 	data: string;
 };
 
+type Session = {
+	xterm: XTerm;
+	fitAddon: FitAddon;
+	sessionId: string;
+	unlisten: UnlistenFn;
+};
+
+const sessionsMap = new Map<string, Session>();
+
 export function Terminal() {
 	const selectedWorktree = useAppStore((s) => s.selectedWorktree);
 	const containerRef = useRef<HTMLDivElement>(null);
-	const sessionIdRef = useRef<string | null>(null);
-	const unlistenRef = useRef<UnlistenFn | null>(null);
+	const activePathRef = useRef<string | null>(null);
 
-	const cleanup = useCallback(async () => {
-		unlistenRef.current?.();
-		unlistenRef.current = null;
-		if (sessionIdRef.current) {
-			await invoke('kill_pty', { sessionId: sessionIdRef.current });
-			sessionIdRef.current = null;
-			useAppStore.getState().setActivePty(null);
+	const detachCurrent = useCallback(() => {
+		const prevPath = activePathRef.current;
+		if (!prevPath) return;
+		const prev = sessionsMap.get(prevPath);
+		if (prev?.xterm.element?.parentElement) {
+			prev.xterm.element.remove();
 		}
+		activePathRef.current = null;
 	}, []);
 
-	useEffect(() => {
-		if (!selectedWorktree || !containerRef.current) return;
+	const attachSession = useCallback(
+		(path: string) => {
+			if (!containerRef.current) return;
+			detachCurrent();
 
-		const xterm = new XTerm({
-			cursorBlink: true,
-			fontSize: 13,
-			fontFamily: 'Menlo, Monaco, "Courier New", monospace',
-			theme: {
-				background: '#1a1a2e',
-				foreground: '#e0e0e0',
-				cursor: '#e0e0e0',
-				selectionBackground: '#3a3a5e',
-			},
-		});
-		const fitAddon = new FitAddon();
-		xterm.loadAddon(fitAddon);
-		xterm.open(containerRef.current);
-		fitAddon.fit();
+			const session = sessionsMap.get(path);
+			if (!session) return;
 
-		const dims = fitAddon.proposeDimensions();
-		const cols = dims?.cols ?? 80;
-		const rows = dims?.rows ?? 24;
+			containerRef.current.appendChild(session.xterm.element!);
+			session.fitAddon.fit();
+			const d = session.fitAddon.proposeDimensions();
+			if (d) {
+				invoke('resize_pty', {
+					sessionId: session.sessionId,
+					cols: d.cols,
+					rows: d.rows,
+				});
+			}
+			session.xterm.focus();
+			activePathRef.current = path;
+		},
+		[detachCurrent],
+	);
 
-		let cancelled = false;
+	const createSession = useCallback(
+		async (path: string) => {
+			if (!containerRef.current) return;
+			detachCurrent();
 
-		(async () => {
-			await cleanup();
-			if (cancelled) return;
+			const xterm = new XTerm({
+				cursorBlink: true,
+				fontSize: 13,
+				fontFamily: 'Menlo, Monaco, "Courier New", monospace',
+				theme: {
+					background: '#1a1a2e',
+					foreground: '#e0e0e0',
+					cursor: '#e0e0e0',
+					selectionBackground: '#3a3a5e',
+				},
+			});
+			const fitAddon = new FitAddon();
+			xterm.loadAddon(fitAddon);
+			xterm.open(containerRef.current);
+			fitAddon.fit();
+
+			const dims = fitAddon.proposeDimensions();
+			const cols = dims?.cols ?? 80;
+			const rows = dims?.rows ?? 24;
 
 			const sessionId = await invoke<string>('create_pty', {
-				worktreePath: selectedWorktree.path,
+				worktreePath: path,
 				cols,
 				rows,
 			});
-			if (cancelled) return;
 
-			sessionIdRef.current = sessionId;
-			useAppStore.getState().setActivePty(sessionId);
-
-			unlistenRef.current = await listen<PtyOutput>('pty-output', (event) => {
+			const unlisten = await listen<PtyOutput>('pty-output', (event) => {
 				if (event.payload.session_id === sessionId) {
 					const bytes = Uint8Array.from(atob(event.payload.data), (c) =>
 						c.charCodeAt(0),
@@ -78,29 +102,65 @@ export function Terminal() {
 			xterm.onData((data) => {
 				invoke('write_pty', { sessionId, data });
 			});
-		})();
+
+			const session: Session = { xterm, fitAddon, sessionId, unlisten };
+			sessionsMap.set(path, session);
+			useAppStore.getState().registerPty(path, sessionId);
+			activePathRef.current = path;
+			xterm.focus();
+		},
+		[detachCurrent],
+	);
+
+	useEffect(() => {
+		const path = selectedWorktree?.path;
+		if (!path || !containerRef.current) return;
+
+		if (sessionsMap.has(path)) {
+			attachSession(path);
+		} else {
+			createSession(path);
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps -- rerun only when path changes
+	}, [selectedWorktree?.path]);
+
+	useEffect(() => {
+		const container = containerRef.current;
+		if (!container) return;
 
 		const observer = new ResizeObserver(() => {
-			fitAddon.fit();
-			const d = fitAddon.proposeDimensions();
-			if (d && sessionIdRef.current) {
+			const path = activePathRef.current;
+			if (!path) return;
+			const session = sessionsMap.get(path);
+			if (!session) return;
+			session.fitAddon.fit();
+			const d = session.fitAddon.proposeDimensions();
+			if (d) {
 				invoke('resize_pty', {
-					sessionId: sessionIdRef.current,
+					sessionId: session.sessionId,
 					cols: d.cols,
 					rows: d.rows,
 				});
 			}
 		});
-		observer.observe(containerRef.current);
+		observer.observe(container);
+		return () => observer.disconnect();
+	}, []);
 
-		return () => {
-			cancelled = true;
-			observer.disconnect();
-			xterm.dispose();
-			cleanup();
-		};
-	// eslint-disable-next-line react-hooks/exhaustive-deps -- rerun only when path changes
-	}, [selectedWorktree?.path, cleanup]);
+	const handleClose = useCallback(async () => {
+		const path = activePathRef.current;
+		if (!path) return;
+		const session = sessionsMap.get(path);
+		if (session) {
+			session.unlisten();
+			session.xterm.dispose();
+			await invoke('kill_pty', { sessionId: session.sessionId });
+			sessionsMap.delete(path);
+			useAppStore.getState().unregisterPty(path);
+		}
+		activePathRef.current = null;
+		useAppStore.getState().selectWorktree(null);
+	}, []);
 
 	if (!selectedWorktree) return null;
 
@@ -108,13 +168,7 @@ export function Terminal() {
 		<div className="terminal-panel">
 			<div className="panel-header">
 				<span>TERMINAL — {selectedWorktree.name}</span>
-				<button
-					className="btn-close"
-					onClick={() => {
-						cleanup();
-						useAppStore.getState().selectWorktree(null);
-					}}
-				>
+				<button className="btn-close" onClick={handleClose}>
 					×
 				</button>
 			</div>

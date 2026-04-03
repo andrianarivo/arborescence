@@ -6,12 +6,13 @@ type AppStore = {
 	selectedRepo: Repo | null;
 	worktrees: Worktree[];
 	selectedWorktree: Worktree | null;
-	activePtySession: string | null;
+	ptySessions: Record<string, string>;
 	setRepos: (repos: Repo[]) => void;
 	selectRepo: (repo: Repo | null) => void;
 	setWorktrees: (wts: Worktree[]) => void;
 	selectWorktree: (wt: Worktree | null) => void;
-	setActivePty: (sessionId: string | null) => void;
+	registerPty: (worktreePath: string, sessionId: string) => void;
+	unregisterPty: (worktreePath: string) => void;
 };
 
 export const useAppStore = create<AppStore>((set) => ({
@@ -19,11 +20,20 @@ export const useAppStore = create<AppStore>((set) => ({
 	selectedRepo: null,
 	worktrees: [],
 	selectedWorktree: null,
-	activePtySession: null,
+	ptySessions: {},
 	setRepos: (repos) => set({ repos }),
 	selectRepo: (repo) =>
 		set({ selectedRepo: repo, worktrees: [], selectedWorktree: null }),
 	setWorktrees: (worktrees) => set({ worktrees }),
 	selectWorktree: (wt) => set({ selectedWorktree: wt }),
-	setActivePty: (sessionId) => set({ activePtySession: sessionId }),
+	registerPty: (worktreePath, sessionId) =>
+		set((s) => ({
+			ptySessions: { ...s.ptySessions, [worktreePath]: sessionId },
+		})),
+	unregisterPty: (worktreePath) =>
+		set((s) => {
+			const next = { ...s.ptySessions };
+			delete next[worktreePath];
+			return { ptySessions: next };
+		}),
 }));
