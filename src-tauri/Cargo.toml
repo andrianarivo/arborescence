@@ -1,5 +1,5 @@
 [package]
-name = "arbor"
+name = "arborescence"
 version = "0.1.0"
 description = "Git Worktree Manager"
 edition = "2021"

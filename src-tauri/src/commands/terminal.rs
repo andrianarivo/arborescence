@@ -48,6 +48,10 @@ fn openpty_and_spawn(
             let dir = std::ffi::CString::new(worktree_path).unwrap();
             unsafe { libc::chdir(dir.as_ptr()) };
 
+            std::env::set_var("TERM", "xterm-256color");
+            std::env::set_var("COLORTERM", "truecolor");
+            std::env::set_var("LANG", "en_US.UTF-8");
+
             let shell_c = std::ffi::CString::new(shell.as_str()).unwrap();
             let args = [shell_c.as_ptr(), std::ptr::null()];
             unsafe { libc::execvp(shell_c.as_ptr(), args.as_ptr()) };
