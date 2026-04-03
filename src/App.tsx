@@ -19,7 +19,7 @@ export default function App() {
 		<div className={`app ${selectedWorktree ? 'with-terminal' : ''}`}>
 			<RepoList />
 			<WorktreeList />
-			{selectedWorktree && <Terminal />}
+			<Terminal />
 		</div>
 	);
 }

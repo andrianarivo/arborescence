@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
+import { Unicode11Addon } from '@xterm/addon-unicode11';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import '@xterm/xterm/css/xterm.css';
@@ -20,66 +21,72 @@ type Session = {
 
 const sessionsMap = new Map<string, Session>();
 
+function createXTerm(container: HTMLElement): { xterm: XTerm; fitAddon: FitAddon } {
+	const xterm = new XTerm({
+		allowProposedApi: true,
+		cursorBlink: true,
+		fontSize: 13,
+		fontFamily:
+			'"CaskaydiaCove NFM", "CaskaydiaCove Nerd Font Mono", Menlo, Monaco, "Courier New", monospace',
+		theme: {
+			background: '#1a1a2e',
+			foreground: '#e0e0e0',
+			cursor: '#e0e0e0',
+			selectionBackground: '#3a3a5e',
+		},
+	});
+	const fitAddon = new FitAddon();
+	xterm.loadAddon(fitAddon);
+	xterm.loadAddon(new Unicode11Addon());
+	xterm.open(container);
+	xterm.unicode.activeVersion = '11';
+	fitAddon.fit();
+	return { xterm, fitAddon };
+}
+
 export function Terminal() {
 	const selectedWorktree = useAppStore((s) => s.selectedWorktree);
 	const containerRef = useRef<HTMLDivElement>(null);
 	const activePathRef = useRef<string | null>(null);
 
-	const detachCurrent = useCallback(() => {
+	const activateSession = useCallback(async (path: string) => {
+		const container = containerRef.current;
+		console.log('[Terminal] activateSession', { path, container: !!container });
+		if (!container) return;
+
+		// detach previous
 		const prevPath = activePathRef.current;
-		if (!prevPath) return;
-		const prev = sessionsMap.get(prevPath);
-		if (prev?.xterm.element?.parentElement) {
-			prev.xterm.element.remove();
+		if (prevPath && prevPath !== path) {
+			const prev = sessionsMap.get(prevPath);
+			if (prev?.xterm.element?.parentElement) {
+				prev.xterm.element.remove();
+			}
 		}
-		activePathRef.current = null;
-	}, []);
+		activePathRef.current = path;
 
-	const attachSession = useCallback(
-		(path: string) => {
-			if (!containerRef.current) return;
-			detachCurrent();
-
-			const session = sessionsMap.get(path);
-			if (!session) return;
-
-			containerRef.current.appendChild(session.xterm.element!);
-			session.fitAddon.fit();
-			const d = session.fitAddon.proposeDimensions();
+		// reattach existing
+		const existing = sessionsMap.get(path);
+		console.log('[Terminal] existing session?', !!existing);
+		if (existing) {
+			container.appendChild(existing.xterm.element!);
+			existing.fitAddon.fit();
+			const d = existing.fitAddon.proposeDimensions();
 			if (d) {
 				invoke('resize_pty', {
-					sessionId: session.sessionId,
+					sessionId: existing.sessionId,
 					cols: d.cols,
 					rows: d.rows,
 				});
 			}
-			session.xterm.focus();
-			activePathRef.current = path;
-		},
-		[detachCurrent],
-	);
+			existing.xterm.focus();
+			return;
+		}
 
-	const createSession = useCallback(
-		async (path: string) => {
-			if (!containerRef.current) return;
-			detachCurrent();
-
-			const xterm = new XTerm({
-				cursorBlink: true,
-				fontSize: 13,
-				fontFamily: 'Menlo, Monaco, "Courier New", monospace',
-				theme: {
-					background: '#1a1a2e',
-					foreground: '#e0e0e0',
-					cursor: '#e0e0e0',
-					selectionBackground: '#3a3a5e',
-				},
-			});
-			const fitAddon = new FitAddon();
-			xterm.loadAddon(fitAddon);
-			xterm.open(containerRef.current);
-			fitAddon.fit();
-
+		// create new
+		console.log('[Terminal] creating new session for', path);
+		try {
+			const { xterm, fitAddon } = createXTerm(container);
+			console.log('[Terminal] xterm created, calling create_pty');
 			const dims = fitAddon.proposeDimensions();
 			const cols = dims?.cols ?? 80;
 			const rows = dims?.rows ?? 24;
@@ -103,26 +110,21 @@ export function Terminal() {
 				invoke('write_pty', { sessionId, data });
 			});
 
-			const session: Session = { xterm, fitAddon, sessionId, unlisten };
-			sessionsMap.set(path, session);
+			sessionsMap.set(path, { xterm, fitAddon, sessionId, unlisten });
 			useAppStore.getState().registerPty(path, sessionId);
-			activePathRef.current = path;
+			console.log('[Terminal] session ready', sessionId);
 			xterm.focus();
-		},
-		[detachCurrent],
-	);
+		} catch (err) {
+			console.error('Failed to create PTY session:', err);
+		}
+	}, []);
 
 	useEffect(() => {
 		const path = selectedWorktree?.path;
-		if (!path || !containerRef.current) return;
-
-		if (sessionsMap.has(path)) {
-			attachSession(path);
-		} else {
-			createSession(path);
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps -- rerun only when path changes
-	}, [selectedWorktree?.path]);
+		console.log('[Terminal] useEffect path =', path, 'containerRef =', !!containerRef.current);
+		if (!path) return;
+		activateSession(path);
+	}, [selectedWorktree?.path, activateSession]);
 
 	useEffect(() => {
 		const container = containerRef.current;
@@ -162,7 +164,9 @@ export function Terminal() {
 		useAppStore.getState().selectWorktree(null);
 	}, []);
 
-	if (!selectedWorktree) return null;
+	if (!selectedWorktree) {
+		return <div className="terminal-panel" style={{ display: 'none' }} ref={containerRef} />;
+	}
 
 	return (
 		<div className="terminal-panel">
