@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Arbor",
+  "productName": "Arborescence",
   "version": "0.1.0",
   "identifier": "com.arbor.worktree-manager",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Arbor",
+        "title": "Arborescence",
         "width": 1200,
         "height": 800,
         "resizable": true,
