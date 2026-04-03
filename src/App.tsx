@@ -9,45 +9,53 @@ import './App.css';
 
 export default function App() {
 	const selectedWorktree = useAppStore((s) => s.selectedWorktree);
+	const terminalHeight = useAppStore((s) => s.terminalHeight);
+	const setTerminalHeight = useAppStore((s) => s.setTerminalHeight);
 	const setRepos = useAppStore((s) => s.setRepos);
 	const appRef = useRef<HTMLDivElement>(null);
-	const terminalHeight = useRef(300);
 
 	useEffect(() => {
 		invoke<Config>('read_config').then((config) => setRepos(config.repos));
 	}, [setRepos]);
 
-	const handleDrag = useCallback((e: React.MouseEvent) => {
-		e.preventDefault();
-		const startY = e.clientY;
-		const startH = terminalHeight.current;
+	const handleDrag = useCallback(
+		(e: React.MouseEvent) => {
+			e.preventDefault();
+			const startY = e.clientY;
+			const startH = terminalHeight;
 
-		const onMove = (ev: MouseEvent) => {
-			const h = Math.min(600, Math.max(150, startH - (ev.clientY - startY)));
-			terminalHeight.current = h;
-			if (appRef.current) {
-				appRef.current.style.gridTemplateRows = `1fr 4px ${h}px`;
-			}
-		};
+			const onMove = (ev: MouseEvent) => {
+				const h = Math.min(600, Math.max(150, startH - (ev.clientY - startY)));
+				if (appRef.current) {
+					appRef.current.style.gridTemplateRows = `1fr 4px ${h}px`;
+				}
+			};
 
-		const onUp = () => {
-			document.body.style.cursor = '';
-			document.body.style.userSelect = '';
-			document.removeEventListener('mousemove', onMove);
-			document.removeEventListener('mouseup', onUp);
-		};
+			const onUp = (ev: MouseEvent) => {
+				const h = Math.min(600, Math.max(150, startH - (ev.clientY - startY)));
+				setTerminalHeight(h);
+				document.body.style.cursor = '';
+				document.body.style.userSelect = '';
+				document.removeEventListener('mousemove', onMove);
+				document.removeEventListener('mouseup', onUp);
+			};
 
-		document.body.style.cursor = 'row-resize';
-		document.body.style.userSelect = 'none';
-		document.addEventListener('mousemove', onMove);
-		document.addEventListener('mouseup', onUp);
-	}, []);
+			document.body.style.cursor = 'row-resize';
+			document.body.style.userSelect = 'none';
+			document.addEventListener('mousemove', onMove);
+			document.addEventListener('mouseup', onUp);
+		},
+		[terminalHeight, setTerminalHeight],
+	);
 
 	useEffect(() => {
-		if (!selectedWorktree && appRef.current) {
+		if (!appRef.current) return;
+		if (selectedWorktree) {
+			appRef.current.style.gridTemplateRows = `1fr 4px ${terminalHeight}px`;
+		} else {
 			appRef.current.style.gridTemplateRows = '';
 		}
-	}, [selectedWorktree]);
+	}, [selectedWorktree, terminalHeight]);
 
 	return (
 		<div
@@ -56,7 +64,9 @@ export default function App() {
 		>
 			<RepoList />
 			<WorktreeList />
-			{selectedWorktree && <div className="resize-handle" onMouseDown={handleDrag} />}
+			{selectedWorktree && (
+				<div className="resize-handle" onMouseDown={handleDrag} />
+			)}
 			<Terminal />
 		</div>
 	);

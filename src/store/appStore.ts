@@ -6,12 +6,15 @@ type AppStore = {
 	selectedRepo: Repo | null;
 	worktrees: Worktree[];
 	selectedWorktree: Worktree | null;
+	worktreeByRepo: Record<string, string>;
+	terminalHeight: number;
 	ptySessions: Record<string, string[]>;
 	activeTab: Record<string, number>;
 	setRepos: (repos: Repo[]) => void;
 	selectRepo: (repo: Repo | null) => void;
 	setWorktrees: (wts: Worktree[]) => void;
 	selectWorktree: (wt: Worktree | null) => void;
+	setTerminalHeight: (h: number) => void;
 	registerPty: (worktreePath: string, sessionId: string) => void;
 	unregisterPty: (worktreePath: string, sessionId: string) => void;
 	setActiveTab: (worktreePath: string, index: number) => void;
@@ -22,13 +25,37 @@ export const useAppStore = create<AppStore>((set) => ({
 	selectedRepo: null,
 	worktrees: [],
 	selectedWorktree: null,
+	worktreeByRepo: {},
+	terminalHeight: 300,
 	ptySessions: {},
 	activeTab: {},
 	setRepos: (repos) => set({ repos }),
 	selectRepo: (repo) =>
 		set({ selectedRepo: repo, worktrees: [], selectedWorktree: null }),
-	setWorktrees: (worktrees) => set({ worktrees }),
-	selectWorktree: (wt) => set({ selectedWorktree: wt }),
+	setWorktrees: (worktrees) =>
+		set((s) => {
+			const repoPath = s.selectedRepo?.path;
+			const remembered = repoPath ? s.worktreeByRepo[repoPath] : undefined;
+			const match = remembered
+				? worktrees.find((wt) => wt.path === remembered)
+				: undefined;
+			return { worktrees, selectedWorktree: match ?? null };
+		}),
+	selectWorktree: (wt) =>
+		set((s) => {
+			const repoPath = s.selectedRepo?.path;
+			if (!repoPath) return { selectedWorktree: wt };
+			if (wt) {
+				return {
+					selectedWorktree: wt,
+					worktreeByRepo: { ...s.worktreeByRepo, [repoPath]: wt.path },
+				};
+			}
+			const next = { ...s.worktreeByRepo };
+			delete next[repoPath];
+			return { selectedWorktree: null, worktreeByRepo: next };
+		}),
+	setTerminalHeight: (h) => set({ terminalHeight: h }),
 	registerPty: (worktreePath, sessionId) =>
 		set((s) => {
 			const list = [...(s.ptySessions[worktreePath] || []), sessionId];
