@@ -43,6 +43,12 @@ export default function App() {
 		document.addEventListener('mouseup', onUp);
 	}, []);
 
+	useEffect(() => {
+		if (!selectedWorktree && appRef.current) {
+			appRef.current.style.gridTemplateRows = '';
+		}
+	}, [selectedWorktree]);
+
 	return (
 		<div
 			ref={appRef}
