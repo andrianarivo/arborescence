@@ -79,11 +79,13 @@ export function Terminal() {
 			if (!session) return;
 
 			container.appendChild(session.xterm.element!);
-			session.fitAddon.fit();
-			const d = session.fitAddon.proposeDimensions();
-			if (d) {
-				invoke('resize_pty', { sessionId, cols: d.cols, rows: d.rows });
-			}
+			requestAnimationFrame(() => {
+				session.fitAddon.fit();
+				const d = session.fitAddon.proposeDimensions();
+				if (d) {
+					invoke('resize_pty', { sessionId, cols: d.cols, rows: d.rows });
+				}
+			});
 			session.xterm.focus();
 			activeSessionRef.current = sessionId;
 		},
@@ -195,7 +197,7 @@ export function Terminal() {
 		});
 		observer.observe(container);
 		return () => observer.disconnect();
-	}, []);
+	}, [selectedWorktree]);
 
 	if (!selectedWorktree) {
 		return (
