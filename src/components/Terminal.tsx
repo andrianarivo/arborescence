@@ -136,6 +136,13 @@ export function Terminal() {
 			sessionsMap.set(sessionId, { xterm, fitAddon, unlisten });
 			useAppStore.getState().registerPty(path, sessionId);
 			activeSessionRef.current = sessionId;
+			requestAnimationFrame(() => {
+				fitAddon.fit();
+				const d = fitAddon.proposeDimensions();
+				if (d) {
+					invoke('resize_pty', { sessionId, cols: d.cols, rows: d.rows });
+				}
+			});
 			xterm.focus();
 		} catch (err) {
 			console.error('Failed to create PTY session:', err);
