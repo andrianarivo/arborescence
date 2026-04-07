@@ -166,10 +166,6 @@ pub async fn kill_pty(
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     let mut sessions = state.pty_sessions.lock();
-    if let Some(session) = sessions.remove(&session_id) {
-        unsafe {
-            libc::kill(session.child_pid as i32, libc::SIGTERM);
-        }
-    }
+    sessions.remove(&session_id);
     Ok(())
 }
