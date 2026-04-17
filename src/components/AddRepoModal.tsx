@@ -53,7 +53,11 @@ export function AddRepoModal({ onClose }: Props) {
 							placeholder="Aucun dossier selectionne"
 							onClick={handleBrowse}
 						/>
-						<button type="button" className="btn-secondary" onClick={handleBrowse}>
+						<button
+							type="button"
+							className="btn-secondary"
+							onClick={handleBrowse}
+						>
 							Parcourir
 						</button>
 					</div>

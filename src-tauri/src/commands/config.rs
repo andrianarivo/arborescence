@@ -6,6 +6,8 @@ use std::path::PathBuf;
 pub struct Repo {
     pub name: String,
     pub path: String,
+    #[serde(default)]
+    pub hidden: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

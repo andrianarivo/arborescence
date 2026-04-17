@@ -25,5 +25,12 @@ export function useConfig() {
 		await saveConfig(updated);
 	};
 
-	return { loadConfig, addRepo, removeRepo };
+	const toggleHideRepo = async (path: string) => {
+		const updated = repos.map((r) =>
+			r.path === path ? { ...r, hidden: !r.hidden } : r,
+		);
+		await saveConfig(updated);
+	};
+
+	return { loadConfig, addRepo, removeRepo, toggleHideRepo };
 }

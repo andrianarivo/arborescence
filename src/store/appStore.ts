@@ -10,7 +10,9 @@ type AppStore = {
 	terminalHeight: number;
 	ptySessions: Record<string, string[]>;
 	activeTab: Record<string, number>;
+	showHidden: boolean;
 	setRepos: (repos: Repo[]) => void;
+	toggleShowHidden: () => void;
 	selectRepo: (repo: Repo | null) => void;
 	setWorktrees: (wts: Worktree[]) => void;
 	selectWorktree: (wt: Worktree | null) => void;
@@ -29,7 +31,9 @@ export const useAppStore = create<AppStore>((set) => ({
 	terminalHeight: 300,
 	ptySessions: {},
 	activeTab: {},
+	showHidden: false,
 	setRepos: (repos) => set({ repos }),
+	toggleShowHidden: () => set((s) => ({ showHidden: !s.showHidden })),
 	selectRepo: (repo) =>
 		set({ selectedRepo: repo, worktrees: [], selectedWorktree: null }),
 	setWorktrees: (worktrees) =>

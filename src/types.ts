@@ -1,6 +1,7 @@
 export type Repo = {
 	name: string;
 	path: string;
+	hidden?: boolean;
 };
 
 export type Config = {

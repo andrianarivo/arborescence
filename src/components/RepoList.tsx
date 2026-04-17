@@ -7,10 +7,15 @@ import { ConfirmDialog } from './ConfirmDialog';
 import type { Repo, Worktree } from '../types';
 
 export function RepoList() {
-	const { repos, selectedRepo, selectRepo } = useAppStore();
-	const { removeRepo } = useConfig();
+	const { repos, selectedRepo, selectRepo, showHidden, toggleShowHidden } =
+		useAppStore();
+	const { removeRepo, toggleHideRepo } = useConfig();
 	const [showAddModal, setShowAddModal] = useState(false);
 	const [repoToDelete, setRepoToDelete] = useState<Repo | null>(null);
+	const [contextRepo, setContextRepo] = useState<Repo | null>(null);
+	const [contextPos, setContextPos] = useState({ x: 0, y: 0 });
+
+	const visibleRepos = showHidden ? repos : repos.filter((r) => !r.hidden);
 
 	const handleSelect = async (repo: Repo) => {
 		selectRepo(repo);
@@ -34,19 +39,32 @@ export function RepoList() {
 	};
 
 	return (
-		<div className="repo-list">
+		<div className="repo-list" onClick={() => setContextRepo(null)}>
 			<div className="panel-header">
 				<span>REPOS</span>
+				<button
+					className={`btn-toggle-hidden ${showHidden ? 'active' : ''}`}
+					onClick={toggleShowHidden}
+					title={
+						showHidden
+							? 'Masquer les repos cachés'
+							: 'Afficher les repos cachés'
+					}
+				>
+					{showHidden ? '◉' : '◎'}
+				</button>
 			</div>
 			<div className="panel-content">
-				{repos.map((repo) => (
+				{visibleRepos.map((repo) => (
 					<div
 						key={repo.path}
-						className={`list-item ${selectedRepo?.path === repo.path ? 'active' : ''}`}
+						className={`list-item ${selectedRepo?.path === repo.path ? 'active' : ''} ${repo.hidden ? 'hidden-repo' : ''}`}
 						onClick={() => handleSelect(repo)}
 						onContextMenu={(e) => {
 							e.preventDefault();
-							setRepoToDelete(repo);
+							e.stopPropagation();
+							setContextRepo(repo);
+							setContextPos({ x: e.clientX, y: e.clientY });
 						}}
 					>
 						{repo.name}
@@ -56,6 +74,29 @@ export function RepoList() {
 			<button className="btn-add" onClick={() => setShowAddModal(true)}>
 				+ Add repo
 			</button>
+			{contextRepo && (
+				<div
+					className="context-menu"
+					style={{ top: contextPos.y, left: contextPos.x }}
+				>
+					<button
+						onClick={() => {
+							toggleHideRepo(contextRepo.path);
+							setContextRepo(null);
+						}}
+					>
+						{contextRepo.hidden ? 'Afficher' : 'Cacher'}
+					</button>
+					<button
+						onClick={() => {
+							setRepoToDelete(contextRepo);
+							setContextRepo(null);
+						}}
+					>
+						Retirer
+					</button>
+				</div>
+			)}
 			{showAddModal && <AddRepoModal onClose={() => setShowAddModal(false)} />}
 			{repoToDelete && (
 				<ConfirmDialog
