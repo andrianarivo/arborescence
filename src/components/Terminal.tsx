@@ -21,6 +21,24 @@ type Session = {
 
 const sessionsMap = new Map<string, Session>();
 
+const FONT_SIZE = 13;
+const FONT_FAMILY =
+	'"CaskaydiaCove NFM", "CaskaydiaCove Nerd Font Mono", Menlo, Monaco, "Courier New", monospace';
+
+async function ensureFontLoaded() {
+	if (!document.fonts?.load) return;
+	try {
+		await document.fonts.load(`${FONT_SIZE}px "CaskaydiaCove NFM"`);
+		await document.fonts.ready;
+	} catch {
+		// fallback font will be used
+	}
+}
+
+function nextFrame(): Promise<void> {
+	return new Promise((resolve) => requestAnimationFrame(() => resolve()));
+}
+
 function createXTerm(container: HTMLElement): {
 	xterm: XTerm;
 	fitAddon: FitAddon;
@@ -28,9 +46,8 @@ function createXTerm(container: HTMLElement): {
 	const xterm = new XTerm({
 		allowProposedApi: true,
 		cursorBlink: true,
-		fontSize: 13,
-		fontFamily:
-			'"CaskaydiaCove NFM", "CaskaydiaCove Nerd Font Mono", Menlo, Monaco, "Courier New", monospace',
+		fontSize: FONT_SIZE,
+		fontFamily: FONT_FAMILY,
 		theme: {
 			background: '#1a1a2e',
 			foreground: '#e0e0e0',
@@ -43,7 +60,6 @@ function createXTerm(container: HTMLElement): {
 	xterm.loadAddon(new Unicode11Addon());
 	xterm.open(container);
 	xterm.unicode.activeVersion = '11';
-	fitAddon.fit();
 	return { xterm, fitAddon };
 }
 
@@ -97,7 +113,10 @@ export function Terminal() {
 		detachCurrent();
 
 		try {
+			await ensureFontLoaded();
 			const { xterm, fitAddon } = createXTerm(containerRef.current);
+			await nextFrame();
+			fitAddon.fit();
 			const dims = fitAddon.proposeDimensions();
 			const cols = dims?.cols ?? 80;
 			const rows = dims?.rows ?? 24;
@@ -136,13 +155,6 @@ export function Terminal() {
 			sessionsMap.set(sessionId, { xterm, fitAddon, unlisten });
 			useAppStore.getState().registerPty(path, sessionId);
 			activeSessionRef.current = sessionId;
-			requestAnimationFrame(() => {
-				fitAddon.fit();
-				const d = fitAddon.proposeDimensions();
-				if (d) {
-					invoke('resize_pty', { sessionId, cols: d.cols, rows: d.rows });
-				}
-			});
 			xterm.focus();
 		} catch (err) {
 			console.error('Failed to create PTY session:', err);
@@ -191,19 +203,27 @@ export function Terminal() {
 		const container = containerRef.current;
 		if (!container) return;
 
+		let pending = 0;
 		const observer = new ResizeObserver(() => {
-			const sid = activeSessionRef.current;
-			if (!sid) return;
-			const session = sessionsMap.get(sid);
-			if (!session) return;
-			session.fitAddon.fit();
-			const d = session.fitAddon.proposeDimensions();
-			if (d) {
-				invoke('resize_pty', { sessionId: sid, cols: d.cols, rows: d.rows });
-			}
+			if (pending) cancelAnimationFrame(pending);
+			pending = requestAnimationFrame(() => {
+				pending = 0;
+				const sid = activeSessionRef.current;
+				if (!sid) return;
+				const session = sessionsMap.get(sid);
+				if (!session) return;
+				session.fitAddon.fit();
+				const d = session.fitAddon.proposeDimensions();
+				if (d) {
+					invoke('resize_pty', { sessionId: sid, cols: d.cols, rows: d.rows });
+				}
+			});
 		});
 		observer.observe(container);
-		return () => observer.disconnect();
+		return () => {
+			if (pending) cancelAnimationFrame(pending);
+			observer.disconnect();
+		};
 	}, [selectedWorktree]);
 
 	if (!selectedWorktree) {
