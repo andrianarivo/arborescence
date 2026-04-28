@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAppStore } from '../store/appStore';
 import { useWorktrees } from '../hooks/useWorktrees';
+import { useConfig } from '../hooks/useConfig';
 import { NewWorktreeModal } from './NewWorktreeModal';
 import { ConfirmDialog } from './ConfirmDialog';
 import type { Worktree } from '../types';
@@ -17,12 +18,30 @@ function timeAgo(isoDate: string): string {
 }
 
 export function WorktreeList() {
-	const { selectedRepo, worktrees, selectedWorktree, selectWorktree } =
-		useAppStore();
+	const {
+		selectedRepo,
+		worktrees,
+		selectedWorktree,
+		selectWorktree,
+		worktreeLabels,
+	} = useAppStore();
 	const { deleteWorktree, checkUnpushed } = useWorktrees();
+	const { setWorktreeLabel, removeWorktreeLabel } = useConfig();
 	const [showNewModal, setShowNewModal] = useState(false);
 	const [wtToDelete, setWtToDelete] = useState<Worktree | null>(null);
 	const [unpushedCommits, setUnpushedCommits] = useState<string[]>([]);
+	const [contextWt, setContextWt] = useState<Worktree | null>(null);
+	const [contextPos, setContextPos] = useState({ x: 0, y: 0 });
+	const [renamingPath, setRenamingPath] = useState<string | null>(null);
+	const [draftLabel, setDraftLabel] = useState('');
+	const inputRef = useRef<HTMLInputElement>(null);
+
+	useEffect(() => {
+		if (renamingPath && inputRef.current) {
+			inputRef.current.focus();
+			inputRef.current.select();
+		}
+	}, [renamingPath]);
 
 	if (!selectedRepo) {
 		return (
@@ -55,47 +74,126 @@ export function WorktreeList() {
 		setUnpushedCommits([]);
 	};
 
+	const startRename = (wt: Worktree) => {
+		setRenamingPath(wt.path);
+		setDraftLabel(worktreeLabels[wt.path] ?? '');
+		setContextWt(null);
+	};
+
+	const commitRename = async () => {
+		if (!renamingPath) return;
+		await setWorktreeLabel(renamingPath, draftLabel);
+		setRenamingPath(null);
+		setDraftLabel('');
+	};
+
+	const cancelRename = () => {
+		setRenamingPath(null);
+		setDraftLabel('');
+	};
+
 	return (
-		<div className="worktree-list">
+		<div className="worktree-list" onClick={() => setContextWt(null)}>
 			<div className="panel-header">
 				<span>WORKTREES — {selectedRepo.name}</span>
 			</div>
 			<div className="panel-content">
-				{worktrees.map((wt) => (
-					<div
-						key={wt.path}
-						className={`list-item worktree-item ${selectedWorktree?.path === wt.path ? 'active' : ''}`}
-						onClick={() => handleOpenTerminal(wt)}
-						onDoubleClick={() => handleOpenTerminal(wt)}
-					>
-						<div className="worktree-info">
-							<span className={`worktree-indicator ${wt.isMain ? 'main' : ''}`}>
-								{wt.isMain ? '●' : ''}
-							</span>
-							<span className="worktree-name">
-								{wt.isMain ? wt.branch : wt.name}
-							</span>
-						</div>
-						<div className="worktree-meta">
-							<span className="worktree-time">{timeAgo(wt.lastActivity)}</span>
-							{!wt.isMain && (
-								<button
-									className="btn-delete"
-									onClick={(e) => {
-										e.stopPropagation();
-										handleDeleteRequest(wt);
-									}}
+				{worktrees.map((wt) => {
+					const label = worktreeLabels[wt.path];
+					const defaultName = wt.isMain ? wt.branch : wt.name;
+					const isRenaming = renamingPath === wt.path;
+					return (
+						<div
+							key={wt.path}
+							className={`list-item worktree-item ${selectedWorktree?.path === wt.path ? 'active' : ''}`}
+							onClick={() => !isRenaming && handleOpenTerminal(wt)}
+							onDoubleClick={() => !isRenaming && handleOpenTerminal(wt)}
+							onContextMenu={(e) => {
+								e.preventDefault();
+								e.stopPropagation();
+								setContextWt(wt);
+								setContextPos({ x: e.clientX, y: e.clientY });
+							}}
+						>
+							<div className="worktree-info">
+								<span
+									className={`worktree-indicator ${wt.isMain ? 'main' : ''}`}
 								>
-									×
-								</button>
-							)}
+									{wt.isMain ? '●' : ''}
+								</span>
+								{isRenaming ? (
+									<input
+										ref={inputRef}
+										className="worktree-label-input"
+										value={draftLabel}
+										maxLength={50}
+										onChange={(e) => setDraftLabel(e.target.value)}
+										onClick={(e) => e.stopPropagation()}
+										onKeyDown={(e) => {
+											if (e.key === 'Enter') {
+												e.preventDefault();
+												commitRename();
+											} else if (e.key === 'Escape') {
+												e.preventDefault();
+												cancelRename();
+											}
+										}}
+										onBlur={() => commitRename()}
+									/>
+								) : (
+									<div className="worktree-name-group">
+										<span className="worktree-name">
+											{label ?? defaultName}
+										</span>
+										{label && (
+											<span className="worktree-subtext">{defaultName}</span>
+										)}
+									</div>
+								)}
+							</div>
+							<div className="worktree-meta">
+								<span className="worktree-time">
+									{timeAgo(wt.lastActivity)}
+								</span>
+								{!wt.isMain && (
+									<button
+										className="btn-delete"
+										onClick={(e) => {
+											e.stopPropagation();
+											handleDeleteRequest(wt);
+										}}
+									>
+										×
+									</button>
+								)}
+							</div>
 						</div>
-					</div>
-				))}
+					);
+				})}
 			</div>
 			<button className="btn-add" onClick={() => setShowNewModal(true)}>
 				+ New worktree
 			</button>
+			{contextWt && (
+				<div
+					className="context-menu"
+					style={{ top: contextPos.y, left: contextPos.x }}
+				>
+					<button onClick={() => startRename(contextWt)}>
+						{worktreeLabels[contextWt.path] ? 'Renommer' : 'Ajouter label'}
+					</button>
+					{worktreeLabels[contextWt.path] && (
+						<button
+							onClick={() => {
+								removeWorktreeLabel(contextWt.path);
+								setContextWt(null);
+							}}
+						>
+							Retirer le label
+						</button>
+					)}
+				</div>
+			)}
 			{showNewModal && (
 				<NewWorktreeModal onClose={() => setShowNewModal(false)} />
 			)}

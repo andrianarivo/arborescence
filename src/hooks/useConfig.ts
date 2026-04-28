@@ -3,34 +3,67 @@ import { useAppStore } from '../store/appStore';
 import type { Config, Repo } from '../types';
 
 export function useConfig() {
-	const { repos, setRepos } = useAppStore();
+	const { repos, setRepos, worktreeLabels, setWorktreeLabels } = useAppStore();
 
 	const loadConfig = async () => {
 		const config = await invoke<Config>('read_config');
-		setRepos(config.repos);
+		setRepos(config.repos ?? []);
+		setWorktreeLabels(config.worktreeLabels ?? {});
 	};
 
-	const saveConfig = async (updatedRepos: Repo[]) => {
-		await invoke('write_config', { config: { repos: updatedRepos } });
+	const persist = async (
+		updatedRepos: Repo[],
+		updatedLabels: Record<string, string>,
+	) => {
+		await invoke('write_config', {
+			config: { repos: updatedRepos, worktreeLabels: updatedLabels },
+		});
 		setRepos(updatedRepos);
+		setWorktreeLabels(updatedLabels);
 	};
 
 	const addRepo = async (repo: Repo) => {
-		const updated = [...repos, repo];
-		await saveConfig(updated);
+		await persist([...repos, repo], worktreeLabels);
 	};
 
 	const removeRepo = async (path: string) => {
-		const updated = repos.filter((r) => r.path !== path);
-		await saveConfig(updated);
+		await persist(
+			repos.filter((r) => r.path !== path),
+			worktreeLabels,
+		);
 	};
 
 	const toggleHideRepo = async (path: string) => {
 		const updated = repos.map((r) =>
 			r.path === path ? { ...r, hidden: !r.hidden } : r,
 		);
-		await saveConfig(updated);
+		await persist(updated, worktreeLabels);
 	};
 
-	return { loadConfig, addRepo, removeRepo, toggleHideRepo };
+	const setWorktreeLabel = async (worktreePath: string, label: string) => {
+		const next = { ...worktreeLabels };
+		const trimmed = label.trim();
+		if (trimmed) {
+			next[worktreePath] = trimmed.slice(0, 50);
+		} else {
+			delete next[worktreePath];
+		}
+		await persist(repos, next);
+	};
+
+	const removeWorktreeLabel = async (worktreePath: string) => {
+		if (!(worktreePath in worktreeLabels)) return;
+		const next = { ...worktreeLabels };
+		delete next[worktreePath];
+		await persist(repos, next);
+	};
+
+	return {
+		loadConfig,
+		addRepo,
+		removeRepo,
+		toggleHideRepo,
+		setWorktreeLabel,
+		removeWorktreeLabel,
+	};
 }

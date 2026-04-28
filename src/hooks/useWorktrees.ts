@@ -1,9 +1,11 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useAppStore } from '../store/appStore';
+import { useConfig } from './useConfig';
 import type { Worktree } from '../types';
 
 export function useWorktrees() {
 	const { selectedRepo, setWorktrees } = useAppStore();
+	const { removeWorktreeLabel } = useConfig();
 
 	const loadWorktrees = async () => {
 		if (!selectedRepo) return;
@@ -24,6 +26,7 @@ export function useWorktrees() {
 
 	const deleteWorktree = async (worktreePath: string) => {
 		await invoke('remove_worktree', { worktreePath });
+		await removeWorktreeLabel(worktreePath);
 		await loadWorktrees();
 	};
 

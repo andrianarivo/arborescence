@@ -138,6 +138,39 @@ body {
 
 .worktree-name {
 	font-size: 13px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 200px;
+}
+
+.worktree-name-group {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.worktree-subtext {
+	font-size: 11px;
+	color: var(--text-secondary);
+	opacity: 0.7;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 200px;
+}
+
+.worktree-label-input {
+	background: var(--bg-primary);
+	border: 1px solid var(--accent);
+	color: var(--text-primary);
+	font-size: 13px;
+	font-family: inherit;
+	padding: 2px 6px;
+	border-radius: 3px;
+	outline: none;
+	min-width: 0;
+	width: 200px;
 }
 
 .worktree-meta {

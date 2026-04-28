@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 
@@ -10,15 +11,12 @@ pub struct Repo {
     pub hidden: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct Config {
+    #[serde(default)]
     pub repos: Vec<Repo>,
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Self { repos: vec![] }
-    }
+    #[serde(default, rename = "worktreeLabels")]
+    pub worktree_labels: HashMap<String, String>,
 }
 
 fn config_path() -> Result<PathBuf, String> {
