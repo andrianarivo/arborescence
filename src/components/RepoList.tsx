@@ -4,6 +4,7 @@ import { useAppStore } from '../store/appStore';
 import { useConfig } from '../hooks/useConfig';
 import { AddRepoModal } from './AddRepoModal';
 import { ConfirmDialog } from './ConfirmDialog';
+import ThemeToggle from './ThemeToggle';
 import type { Repo, Worktree } from '../types';
 
 export function RepoList() {
@@ -42,17 +43,20 @@ export function RepoList() {
 		<div className="repo-list" onClick={() => setContextRepo(null)}>
 			<div className="panel-header">
 				<span>REPOS</span>
-				<button
-					className={`btn-toggle-hidden ${showHidden ? 'active' : ''}`}
-					onClick={toggleShowHidden}
-					title={
-						showHidden
-							? 'Masquer les repos cachés'
-							: 'Afficher les repos cachés'
-					}
-				>
-					{showHidden ? '◉' : '◎'}
-				</button>
+				<div className="flex items-center gap-1">
+					<ThemeToggle />
+					<button
+						className={`btn-toggle-hidden ${showHidden ? 'active' : ''}`}
+						onClick={toggleShowHidden}
+						title={
+							showHidden
+								? 'Masquer les repos cachés'
+								: 'Afficher les repos cachés'
+						}
+					>
+						{showHidden ? '◉' : '◎'}
+					</button>
+				</div>
 			</div>
 			<div className="panel-content">
 				{visibleRepos.map((repo) => (
