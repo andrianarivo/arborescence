@@ -1,11 +1,12 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { Terminal as XTerm } from '@xterm/xterm';
+import { Terminal as XTerm, type ITheme } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { Unicode11Addon } from '@xterm/addon-unicode11';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import '@xterm/xterm/css/xterm.css';
 import { useAppStore } from '../store/appStore';
+import { useTheme, type Theme } from '../hooks/useTheme';
 import { loadKeybindings, matchKeybinding } from '../lib/keybindings';
 
 type PtyOutput = {
@@ -25,6 +26,23 @@ const FONT_SIZE = 13;
 const FONT_FAMILY =
 	'"CaskaydiaCove NFM", "CaskaydiaCove Nerd Font Mono", Menlo, Monaco, "Courier New", monospace';
 
+const TERMINAL_THEMES: Record<Theme, ITheme> = {
+	dark: {
+		background: '#1a1a1a',
+		foreground: '#e8e8e8',
+		cursor: '#e8e8e8',
+		selectionBackground: '#3a3a5e',
+	},
+	light: {
+		background: '#ffffff',
+		foreground: '#1f1f1f',
+		cursor: '#1f1f1f',
+		selectionBackground: '#cfe2ff',
+	},
+};
+
+const MIN_CONTRAST_RATIO = 7;
+
 async function ensureFontLoaded() {
 	if (!document.fonts?.load) return;
 	try {
@@ -39,7 +57,10 @@ function nextFrame(): Promise<void> {
 	return new Promise((resolve) => requestAnimationFrame(() => resolve()));
 }
 
-function createXTerm(container: HTMLElement): {
+function createXTerm(
+	container: HTMLElement,
+	theme: Theme,
+): {
 	xterm: XTerm;
 	fitAddon: FitAddon;
 } {
@@ -48,12 +69,8 @@ function createXTerm(container: HTMLElement): {
 		cursorBlink: true,
 		fontSize: FONT_SIZE,
 		fontFamily: FONT_FAMILY,
-		theme: {
-			background: '#1a1a2e',
-			foreground: '#e0e0e0',
-			cursor: '#e0e0e0',
-			selectionBackground: '#3a3a5e',
-		},
+		theme: TERMINAL_THEMES[theme],
+		minimumContrastRatio: MIN_CONTRAST_RATIO,
 	});
 	const fitAddon = new FitAddon();
 	xterm.loadAddon(fitAddon);
@@ -67,8 +84,17 @@ export function Terminal() {
 	const selectedWorktree = useAppStore((s) => s.selectedWorktree);
 	const ptySessions = useAppStore((s) => s.ptySessions);
 	const activeTab = useAppStore((s) => s.activeTab);
+	const { theme } = useTheme();
 	const containerRef = useRef<HTMLDivElement>(null);
 	const activeSessionRef = useRef<string | null>(null);
+
+	useEffect(() => {
+		const t = TERMINAL_THEMES[theme];
+		for (const session of sessionsMap.values()) {
+			session.xterm.options.theme = t;
+			session.xterm.refresh(0, session.xterm.rows - 1);
+		}
+	}, [theme]);
 
 	const path = selectedWorktree?.path;
 	const tabs = path ? ptySessions[path] || [] : [];
@@ -114,7 +140,7 @@ export function Terminal() {
 
 		try {
 			await ensureFontLoaded();
-			const { xterm, fitAddon } = createXTerm(containerRef.current);
+			const { xterm, fitAddon } = createXTerm(containerRef.current, theme);
 			await nextFrame();
 			fitAddon.fit();
 			const dims = fitAddon.proposeDimensions();
@@ -159,7 +185,7 @@ export function Terminal() {
 		} catch (err) {
 			console.error('Failed to create PTY session:', err);
 		}
-	}, [path, detachCurrent]);
+	}, [path, theme, detachCurrent]);
 
 	const closeTab = useCallback(
 		async (sessionId: string) => {

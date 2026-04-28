@@ -1,3 +1,13 @@
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+
 type Props = {
 	title: string;
 	message: string;
@@ -18,42 +28,40 @@ export function ConfirmDialog({
 	onCancel,
 }: Props) {
 	return (
-		<div
-			className="modal-overlay"
-			onClick={() => {
-				if (!loading) onCancel();
+		<Dialog
+			open
+			onOpenChange={(o) => {
+				if (!o && !loading) onCancel();
 			}}
 		>
-			<div className="modal" onClick={(e) => e.stopPropagation()}>
-				<h3>{title}</h3>
-				<p>{message}</p>
+			<DialogContent>
+				<DialogHeader>
+					<DialogTitle>{title}</DialogTitle>
+					<DialogDescription>{message}</DialogDescription>
+				</DialogHeader>
 				{details && details.length > 0 && (
-					<ul className="confirm-details">
+					<ul className="max-h-32 overflow-y-auto pl-5 text-xs text-muted-foreground list-disc">
 						{details.map((d, i) => (
 							<li key={i}>{d}</li>
 						))}
 					</ul>
 				)}
-				<div className="modal-actions">
-					<button
-						className="btn-secondary"
-						onClick={onCancel}
-						disabled={loading}
-					>
+				<DialogFooter>
+					<Button variant="secondary" onClick={onCancel} disabled={loading}>
 						Annuler
-					</button>
-					<button className="btn-danger" onClick={onConfirm} disabled={loading}>
+					</Button>
+					<Button variant="destructive" onClick={onConfirm} disabled={loading}>
 						{loading ? (
-							<span className="btn-loading">
-								<span className="spinner" />
+							<span className="inline-flex items-center gap-2">
+								<span className="size-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
 								{loadingLabel}
 							</span>
 						) : (
 							'Confirmer'
 						)}
-					</button>
-				</div>
-			</div>
-		</div>
+					</Button>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
 	);
 }
