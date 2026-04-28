@@ -2,6 +2,16 @@ import { useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { open } from '@tauri-apps/plugin-dialog';
 import { useConfig } from '../hooks/useConfig';
+import {
+	Dialog,
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 type Props = {
 	onClose: () => void;
@@ -41,41 +51,44 @@ export function AddRepoModal({ onClose }: Props) {
 	};
 
 	return (
-		<div className="modal-overlay" onClick={onClose}>
-			<div className="modal" onClick={(e) => e.stopPropagation()}>
-				<h3>Ajouter un repo</h3>
+		<Dialog open onOpenChange={(o) => !o && onClose()}>
+			<DialogContent>
 				<form onSubmit={handleSubmit}>
-					<div className="folder-picker">
-						<input
-							type="text"
-							value={path}
-							readOnly
-							placeholder="Aucun dossier selectionne"
-							onClick={handleBrowse}
-						/>
-						<button
-							type="button"
-							className="btn-secondary"
-							onClick={handleBrowse}
-						>
-							Parcourir
-						</button>
+					<DialogHeader>
+						<DialogTitle>Ajouter un repo</DialogTitle>
+					</DialogHeader>
+					<div className="grid gap-2 py-4">
+						<Label htmlFor="repo-path">Dossier</Label>
+						<div className="flex gap-2">
+							<Input
+								id="repo-path"
+								type="text"
+								value={path}
+								readOnly
+								placeholder="Aucun dossier sélectionné"
+								onClick={handleBrowse}
+								className="cursor-pointer"
+							/>
+							<Button
+								type="button"
+								variant="secondary"
+								onClick={handleBrowse}
+							>
+								Parcourir
+							</Button>
+						</div>
+						{error && <p className="text-xs text-destructive">{error}</p>}
 					</div>
-					{error && <p className="error">{error}</p>}
-					<div className="modal-actions">
-						<button type="button" className="btn-secondary" onClick={onClose}>
+					<DialogFooter>
+						<Button type="button" variant="secondary" onClick={onClose}>
 							Annuler
-						</button>
-						<button
-							type="submit"
-							className="btn-primary"
-							disabled={loading || !path}
-						>
+						</Button>
+						<Button type="submit" disabled={loading || !path}>
 							{loading ? 'Validation...' : 'Ajouter'}
-						</button>
-					</div>
+						</Button>
+					</DialogFooter>
 				</form>
-			</div>
-		</div>
+			</DialogContent>
+		</Dialog>
 	);
 }
