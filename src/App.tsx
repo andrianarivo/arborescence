@@ -1,22 +1,22 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { invoke } from '@tauri-apps/api/core';
 import { RepoList } from './components/RepoList';
 import { WorktreeList } from './components/WorktreeList';
 import { Terminal } from './components/Terminal';
 import { useAppStore } from './store/appStore';
-import type { Config } from './types';
+import { useConfig } from './hooks/useConfig';
 import './App.css';
 
 export default function App() {
 	const selectedWorktree = useAppStore((s) => s.selectedWorktree);
 	const terminalHeight = useAppStore((s) => s.terminalHeight);
 	const setTerminalHeight = useAppStore((s) => s.setTerminalHeight);
-	const setRepos = useAppStore((s) => s.setRepos);
+	const { loadConfig } = useConfig();
 	const appRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
-		invoke<Config>('read_config').then((config) => setRepos(config.repos));
-	}, [setRepos]);
+		loadConfig();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
 	const handleDrag = useCallback(
 		(e: React.MouseEvent) => {
