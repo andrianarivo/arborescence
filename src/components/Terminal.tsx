@@ -38,11 +38,10 @@ const TERMINAL_THEMES: Record<Theme, ITheme> = {
 		foreground: '#1f1f1f',
 		cursor: '#1f1f1f',
 		selectionBackground: '#cfe2ff',
-		// ANSI 0 (black) remappé en gris clair pour que les prompts
-		// utilisant "ANSI black bg + default fg" restent lisibles en light mode.
-		black: '#d4d4d8',
 	},
 };
+
+const MIN_CONTRAST_RATIO = 7;
 
 async function ensureFontLoaded() {
 	if (!document.fonts?.load) return;
@@ -71,6 +70,7 @@ function createXTerm(
 		fontSize: FONT_SIZE,
 		fontFamily: FONT_FAMILY,
 		theme: TERMINAL_THEMES[theme],
+		minimumContrastRatio: MIN_CONTRAST_RATIO,
 	});
 	const fitAddon = new FitAddon();
 	xterm.loadAddon(fitAddon);
