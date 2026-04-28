@@ -89,6 +89,7 @@ export function Terminal() {
 		const t = TERMINAL_THEMES[theme];
 		for (const session of sessionsMap.values()) {
 			session.xterm.options.theme = t;
+			session.xterm.refresh(0, session.xterm.rows - 1);
 		}
 	}, [theme]);
 
