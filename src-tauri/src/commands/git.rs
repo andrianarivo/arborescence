@@ -140,9 +140,16 @@ pub async fn add_worktree(repo_path: String, branch: String) -> Result<Worktree,
 }
 
 #[tauri::command]
-pub async fn remove_worktree(worktree_path: String) -> Result<(), String> {
+pub async fn remove_worktree(repo_path: String, worktree_path: String) -> Result<(), String> {
     let output = Command::new("git")
-        .args(["worktree", "remove", &worktree_path, "--force"])
+        .args([
+            "-C",
+            &repo_path,
+            "worktree",
+            "remove",
+            &worktree_path,
+            "--force",
+        ])
         .output()
         .map_err(|e| e.to_string())?;
 

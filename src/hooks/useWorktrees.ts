@@ -25,7 +25,11 @@ export function useWorktrees() {
 	};
 
 	const deleteWorktree = async (worktreePath: string) => {
-		await invoke('remove_worktree', { worktreePath });
+		if (!selectedRepo) return;
+		await invoke('remove_worktree', {
+			repoPath: selectedRepo.path,
+			worktreePath,
+		});
 		await removeWorktreeLabel(worktreePath);
 		await loadWorktrees();
 	};
