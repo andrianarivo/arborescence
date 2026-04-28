@@ -1,29 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
+import { Pencil, X } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { useWorktrees } from '../hooks/useWorktrees';
 import { useConfig } from '../hooks/useConfig';
 import { NewWorktreeModal } from './NewWorktreeModal';
 import { ConfirmDialog } from './ConfirmDialog';
+import { Button } from '@/components/ui/button';
 import type { Worktree } from '../types';
-
-function PencilIcon() {
-	return (
-		<svg
-			width="13"
-			height="13"
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			strokeWidth="2"
-			strokeLinecap="round"
-			strokeLinejoin="round"
-			aria-hidden="true"
-		>
-			<path d="M12 20h9" />
-			<path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z" />
-		</svg>
-	);
-}
 
 function timeAgo(isoDate: string): string {
 	if (!isoDate) return '';
@@ -172,27 +155,31 @@ export function WorktreeList() {
 									{timeAgo(wt.lastActivity)}
 								</span>
 								{!isRenaming && (
-									<button
-										className="btn-edit"
+									<Button
+										variant="ghost"
+										size="icon"
+										className="size-6"
 										title={label ? 'Modifier le label' : 'Ajouter un label'}
 										onClick={(e) => {
 											e.stopPropagation();
 											startRename(wt);
 										}}
 									>
-										<PencilIcon />
-									</button>
+										<Pencil className="size-3.5" />
+									</Button>
 								)}
 								{!wt.isMain && (
-									<button
-										className="btn-delete"
+									<Button
+										variant="ghost"
+										size="icon"
+										className="size-6 text-muted-foreground hover:text-destructive"
 										onClick={(e) => {
 											e.stopPropagation();
 											handleDeleteRequest(wt);
 										}}
 									>
-										×
-									</button>
+										<X className="size-4" />
+									</Button>
 								)}
 							</div>
 						</div>

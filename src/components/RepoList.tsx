@@ -5,6 +5,12 @@ import { useConfig } from '../hooks/useConfig';
 import { AddRepoModal } from './AddRepoModal';
 import { ConfirmDialog } from './ConfirmDialog';
 import ThemeToggle from './ThemeToggle';
+import {
+	ContextMenu,
+	ContextMenuContent,
+	ContextMenuItem,
+	ContextMenuTrigger,
+} from '@/components/ui/context-menu';
 import type { Repo, Worktree } from '../types';
 
 export function RepoList() {
@@ -13,8 +19,6 @@ export function RepoList() {
 	const { removeRepo, toggleHideRepo } = useConfig();
 	const [showAddModal, setShowAddModal] = useState(false);
 	const [repoToDelete, setRepoToDelete] = useState<Repo | null>(null);
-	const [contextRepo, setContextRepo] = useState<Repo | null>(null);
-	const [contextPos, setContextPos] = useState({ x: 0, y: 0 });
 
 	const visibleRepos = showHidden ? repos : repos.filter((r) => !r.hidden);
 
@@ -40,7 +44,7 @@ export function RepoList() {
 	};
 
 	return (
-		<div className="repo-list" onClick={() => setContextRepo(null)}>
+		<div className="repo-list">
 			<div className="panel-header">
 				<span>REPOS</span>
 				<div className="flex items-center gap-1">
@@ -60,47 +64,32 @@ export function RepoList() {
 			</div>
 			<div className="panel-content">
 				{visibleRepos.map((repo) => (
-					<div
-						key={repo.path}
-						className={`list-item ${selectedRepo?.path === repo.path ? 'active' : ''} ${repo.hidden ? 'hidden-repo' : ''}`}
-						onClick={() => handleSelect(repo)}
-						onContextMenu={(e) => {
-							e.preventDefault();
-							e.stopPropagation();
-							setContextRepo(repo);
-							setContextPos({ x: e.clientX, y: e.clientY });
-						}}
-					>
-						{repo.name}
-					</div>
+					<ContextMenu key={repo.path}>
+						<ContextMenuTrigger asChild>
+							<div
+								className={`list-item ${selectedRepo?.path === repo.path ? 'active' : ''} ${repo.hidden ? 'hidden-repo' : ''}`}
+								onClick={() => handleSelect(repo)}
+							>
+								{repo.name}
+							</div>
+						</ContextMenuTrigger>
+						<ContextMenuContent>
+							<ContextMenuItem onSelect={() => toggleHideRepo(repo.path)}>
+								{repo.hidden ? 'Afficher' : 'Cacher'}
+							</ContextMenuItem>
+							<ContextMenuItem
+								variant="destructive"
+								onSelect={() => setRepoToDelete(repo)}
+							>
+								Retirer
+							</ContextMenuItem>
+						</ContextMenuContent>
+					</ContextMenu>
 				))}
 			</div>
 			<button className="btn-add" onClick={() => setShowAddModal(true)}>
 				+ Add repo
 			</button>
-			{contextRepo && (
-				<div
-					className="context-menu"
-					style={{ top: contextPos.y, left: contextPos.x }}
-				>
-					<button
-						onClick={() => {
-							toggleHideRepo(contextRepo.path);
-							setContextRepo(null);
-						}}
-					>
-						{contextRepo.hidden ? 'Afficher' : 'Cacher'}
-					</button>
-					<button
-						onClick={() => {
-							setRepoToDelete(contextRepo);
-							setContextRepo(null);
-						}}
-					>
-						Retirer
-					</button>
-				</div>
-			)}
 			{showAddModal && <AddRepoModal onClose={() => setShowAddModal(false)} />}
 			{repoToDelete && (
 				<ConfirmDialog
