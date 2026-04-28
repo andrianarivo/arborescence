@@ -49,6 +49,7 @@ export function WorktreeList() {
 	const [showNewModal, setShowNewModal] = useState(false);
 	const [wtToDelete, setWtToDelete] = useState<Worktree | null>(null);
 	const [unpushedCommits, setUnpushedCommits] = useState<string[]>([]);
+	const [deleting, setDeleting] = useState(false);
 	const [renamingPath, setRenamingPath] = useState<string | null>(null);
 	const [draftLabel, setDraftLabel] = useState('');
 	const inputRef = useRef<HTMLInputElement>(null);
@@ -82,13 +83,18 @@ export function WorktreeList() {
 	};
 
 	const handleDelete = async () => {
-		if (!wtToDelete) return;
-		await deleteWorktree(wtToDelete.path);
-		if (selectedWorktree?.path === wtToDelete.path) {
-			selectWorktree(null);
+		if (!wtToDelete || deleting) return;
+		setDeleting(true);
+		try {
+			await deleteWorktree(wtToDelete.path);
+			if (selectedWorktree?.path === wtToDelete.path) {
+				selectWorktree(null);
+			}
+			setWtToDelete(null);
+			setUnpushedCommits([]);
+		} finally {
+			setDeleting(false);
 		}
-		setWtToDelete(null);
-		setUnpushedCommits([]);
 	};
 
 	const startRename = (wt: Worktree) => {
@@ -208,6 +214,8 @@ export function WorktreeList() {
 							: `Supprimer le worktree "${wtToDelete.name}" ?`
 					}
 					details={unpushedCommits}
+					loading={deleting}
+					loadingLabel="Suppression..."
 					onConfirm={handleDelete}
 					onCancel={() => {
 						setWtToDelete(null);

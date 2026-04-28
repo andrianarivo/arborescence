@@ -364,9 +364,32 @@ body {
 	background: var(--accent-hover);
 }
 
-.btn-primary:disabled {
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-danger:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
+}
+
+.btn-loading {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.spinner {
+	width: 12px;
+	height: 12px;
+	border: 2px solid rgba(255, 255, 255, 0.3);
+	border-top-color: #fff;
+	border-radius: 50%;
+	animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
+	}
 }
 
 .btn-secondary {
