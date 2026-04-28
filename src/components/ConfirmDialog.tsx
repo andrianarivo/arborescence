@@ -50,11 +50,7 @@ export function ConfirmDialog({
 					<Button variant="secondary" onClick={onCancel} disabled={loading}>
 						Annuler
 					</Button>
-					<Button
-						variant="destructive"
-						onClick={onConfirm}
-						disabled={loading}
-					>
+					<Button variant="destructive" onClick={onConfirm} disabled={loading}>
 						{loading ? (
 							<span className="inline-flex items-center gap-2">
 								<span className="size-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />

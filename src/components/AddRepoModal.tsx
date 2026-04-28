@@ -69,11 +69,7 @@ export function AddRepoModal({ onClose }: Props) {
 								onClick={handleBrowse}
 								className="cursor-pointer"
 							/>
-							<Button
-								type="button"
-								variant="secondary"
-								onClick={handleBrowse}
-							>
+							<Button type="button" variant="secondary" onClick={handleBrowse}>
 								Parcourir
 							</Button>
 						</div>
