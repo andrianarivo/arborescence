@@ -39,7 +39,7 @@ export function AppSidebar() {
 
 	return (
 		<Sidebar collapsible="none">
-			<SidebarHeader className="flex-row items-center justify-between gap-1 px-3 py-2">
+			<SidebarHeader className="flex-row items-center justify-between gap-1 px-4 py-3">
 				<span className="text-xs font-semibold tracking-wider text-muted-foreground">
 					REPOS
 				</span>
@@ -65,7 +65,7 @@ export function AppSidebar() {
 			</SidebarHeader>
 			<SidebarContent>
 				<SidebarGroup>
-					<SidebarMenu>
+					<SidebarMenu className="gap-1">
 						{visibleRepos.map((repo) => (
 							<RepoSidebarItem
 								key={repo.path}
@@ -76,12 +76,12 @@ export function AppSidebar() {
 					</SidebarMenu>
 				</SidebarGroup>
 			</SidebarContent>
-			<SidebarFooter>
+			<SidebarFooter className="p-3">
 				<SidebarMenu>
 					<SidebarMenuItem>
 						<SidebarMenuButton
 							onClick={() => setShowAddModal(true)}
-							className="text-primary"
+							className="h-10 text-primary"
 						>
 							<Plus className="size-4" />
 							<span>Add repo</span>

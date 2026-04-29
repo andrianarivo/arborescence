@@ -17,7 +17,7 @@ export default function App() {
 	}, []);
 
 	return (
-		<SidebarProvider>
+		<SidebarProvider className="h-svh">
 			<AppSidebar />
 			<main className="flex flex-col flex-1 h-screen overflow-hidden">
 				{selectedWorktree ? <Terminal /> : <EmptyState />}

@@ -137,7 +137,7 @@ export function RepoSidebarItem({ repo, onRequestRemove }: Props) {
 					<ContextMenuTrigger asChild>
 						<CollapsibleTrigger asChild>
 							<SidebarMenuButton
-								className={repo.hidden ? 'opacity-50' : ''}
+								className={`h-10 data-[state=open]:border-l-2 data-[state=open]:border-primary ${repo.hidden ? 'opacity-50' : ''}`}
 								tooltip={repo.name}
 							>
 								<ChevronRight className="size-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
@@ -181,7 +181,7 @@ export function RepoSidebarItem({ repo, onRequestRemove }: Props) {
 														selectWorktree(wt);
 													}
 												}}
-												className="group/wt h-auto py-1.5 cursor-pointer"
+												className="group/wt h-9 py-2 cursor-pointer data-[active=true]:border-l-2 data-[active=true]:border-primary"
 											>
 												<span
 													className={
@@ -262,7 +262,7 @@ export function RepoSidebarItem({ repo, onRequestRemove }: Props) {
 							<SidebarMenuSubItem>
 								<SidebarMenuSubButton
 									onClick={() => setShowNewWorktree(true)}
-									className="text-muted-foreground"
+									className="h-9 text-muted-foreground"
 								>
 									<Plus className="size-3.5" />
 									<span>New worktree</span>
