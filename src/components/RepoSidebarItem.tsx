@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { invoke } from '@tauri-apps/api/core';
 import {
 	ChevronRight,
 	Eye,
@@ -48,16 +47,16 @@ type Props = {
 export function RepoSidebarItem({ repo, onRequestRemove }: Props) {
 	const {
 		selectedRepo,
-		worktrees,
+		worktreesByRepo,
 		selectedWorktree,
 		selectRepo,
-		setWorktrees,
 		selectWorktree,
 		worktreeLabels,
 	} = useAppStore();
 	const { toggleHideRepo, setWorktreeLabel } = useConfig();
 	const { deleteWorktree, checkUnpushed } = useWorktrees();
 	const isOpen = selectedRepo?.path === repo.path;
+	const worktrees = worktreesByRepo[repo.path] ?? [];
 
 	const [showNewWorktree, setShowNewWorktree] = useState(false);
 	const [wtToDelete, setWtToDelete] = useState<Worktree | null>(null);
@@ -74,20 +73,8 @@ export function RepoSidebarItem({ repo, onRequestRemove }: Props) {
 		}
 	}, [renamingPath]);
 
-	const handleToggle = async (next: boolean) => {
-		if (!next) {
-			selectRepo(null);
-			return;
-		}
-		selectRepo(repo);
-		try {
-			const wts = await invoke<Worktree[]>('list_worktrees', {
-				repoPath: repo.path,
-			});
-			setWorktrees(wts);
-		} catch {
-			// ignore
-		}
+	const handleToggle = (next: boolean) => {
+		selectRepo(next ? repo : null);
 	};
 
 	const startRename = (wt: Worktree) => {

@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useAppStore } from '../store/appStore';
 import { useConfig } from '../hooks/useConfig';
+import { useWorktreeCache } from '../hooks/useWorktreeCache';
 import { AddRepoModal } from './AddRepoModal';
 import { ConfirmDialog } from './ConfirmDialog';
 import ThemeToggle from './ThemeToggle';
@@ -20,9 +21,16 @@ import { RepoSidebarItem } from './RepoSidebarItem';
 import type { Repo } from '../types';
 
 export function AppSidebar() {
-	const { repos, selectedRepo, selectRepo, showHidden, toggleShowHidden } =
-		useAppStore();
+	const {
+		repos,
+		selectedRepo,
+		selectRepo,
+		showHidden,
+		toggleShowHidden,
+		removeWorktreesForRepo,
+	} = useAppStore();
 	const { removeRepo } = useConfig();
+	const { persist } = useWorktreeCache();
 	const [showAddModal, setShowAddModal] = useState(false);
 	const [repoToDelete, setRepoToDelete] = useState<Repo | null>(null);
 
@@ -31,6 +39,8 @@ export function AppSidebar() {
 	const handleRemove = async () => {
 		if (!repoToDelete) return;
 		await removeRepo(repoToDelete.path);
+		removeWorktreesForRepo(repoToDelete.path);
+		await persist();
 		if (selectedRepo?.path === repoToDelete.path) {
 			selectRepo(null);
 		}

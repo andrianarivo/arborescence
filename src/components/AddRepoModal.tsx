@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { open } from '@tauri-apps/plugin-dialog';
 import { useConfig } from '../hooks/useConfig';
+import { useWorktreeCache } from '../hooks/useWorktreeCache';
 import {
 	Dialog,
 	DialogContent,
@@ -22,6 +23,7 @@ export function AddRepoModal({ onClose }: Props) {
 	const [error, setError] = useState('');
 	const [loading, setLoading] = useState(false);
 	const { addRepo } = useConfig();
+	const { refreshRepo } = useWorktreeCache();
 
 	const handleBrowse = async () => {
 		const selected = await open({ directory: true, multiple: false });
@@ -42,6 +44,7 @@ export function AddRepoModal({ onClose }: Props) {
 			}
 			const name = path.split('/').pop() || path;
 			await addRepo({ name, path });
+			await refreshRepo(path);
 			onClose();
 		} catch (err) {
 			setError(String(err));

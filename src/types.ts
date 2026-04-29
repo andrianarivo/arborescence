@@ -21,3 +21,5 @@ export type PtySession = {
 	sessionId: string;
 	worktreePath: string;
 };
+
+export type WorktreeCache = Record<string, Worktree[]>;

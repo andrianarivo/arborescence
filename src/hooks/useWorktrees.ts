@@ -1,27 +1,20 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useAppStore } from '../store/appStore';
 import { useConfig } from './useConfig';
-import type { Worktree } from '../types';
+import { useWorktreeCache } from './useWorktreeCache';
 
 export function useWorktrees() {
-	const { selectedRepo, setWorktrees } = useAppStore();
+	const selectedRepo = useAppStore((s) => s.selectedRepo);
 	const { removeWorktreeLabel } = useConfig();
-
-	const loadWorktrees = async () => {
-		if (!selectedRepo) return;
-		const wts = await invoke<Worktree[]>('list_worktrees', {
-			repoPath: selectedRepo.path,
-		});
-		setWorktrees(wts);
-	};
+	const { refreshRepo } = useWorktreeCache();
 
 	const createWorktree = async (branch: string) => {
 		if (!selectedRepo) return;
-		await invoke<Worktree>('add_worktree', {
+		await invoke('add_worktree', {
 			repoPath: selectedRepo.path,
 			branch,
 		});
-		await loadWorktrees();
+		await refreshRepo(selectedRepo.path);
 	};
 
 	const deleteWorktree = async (worktreePath: string) => {
@@ -31,12 +24,12 @@ export function useWorktrees() {
 			worktreePath,
 		});
 		await removeWorktreeLabel(worktreePath);
-		await loadWorktrees();
+		await refreshRepo(selectedRepo.path);
 	};
 
 	const checkUnpushed = async (worktreePath: string) => {
 		return invoke<string[]>('check_unpushed', { worktreePath });
 	};
 
-	return { loadWorktrees, createWorktree, deleteWorktree, checkUnpushed };
+	return { createWorktree, deleteWorktree, checkUnpushed };
 }

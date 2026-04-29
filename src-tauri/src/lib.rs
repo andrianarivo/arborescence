@@ -9,6 +9,8 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .manage(AppState::default())
         .invoke_handler(tauri::generate_handler![
+            commands::cache::read_worktree_cache,
+            commands::cache::write_worktree_cache,
             commands::config::read_config,
             commands::config::write_config,
             commands::git::validate_repo,

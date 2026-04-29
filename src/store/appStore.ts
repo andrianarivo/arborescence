@@ -4,7 +4,7 @@ import type { Repo, Worktree } from '../types';
 type AppStore = {
 	repos: Repo[];
 	selectedRepo: Repo | null;
-	worktrees: Worktree[];
+	worktreesByRepo: Record<string, Worktree[]>;
 	selectedWorktree: Worktree | null;
 	worktreeByRepo: Record<string, string>;
 	ptySessions: Record<string, string[]>;
@@ -15,7 +15,9 @@ type AppStore = {
 	setWorktreeLabels: (labels: Record<string, string>) => void;
 	toggleShowHidden: () => void;
 	selectRepo: (repo: Repo | null) => void;
-	setWorktrees: (wts: Worktree[]) => void;
+	setWorktreesByRepo: (cache: Record<string, Worktree[]>) => void;
+	setWorktreesForRepo: (repoPath: string, worktrees: Worktree[]) => void;
+	removeWorktreesForRepo: (repoPath: string) => void;
 	selectWorktree: (wt: Worktree | null) => void;
 	registerPty: (worktreePath: string, sessionId: string) => void;
 	unregisterPty: (worktreePath: string, sessionId: string) => void;
@@ -25,7 +27,7 @@ type AppStore = {
 export const useAppStore = create<AppStore>((set) => ({
 	repos: [],
 	selectedRepo: null,
-	worktrees: [],
+	worktreesByRepo: {},
 	selectedWorktree: null,
 	worktreeByRepo: {},
 	ptySessions: {},
@@ -36,15 +38,36 @@ export const useAppStore = create<AppStore>((set) => ({
 	setWorktreeLabels: (worktreeLabels) => set({ worktreeLabels }),
 	toggleShowHidden: () => set((s) => ({ showHidden: !s.showHidden })),
 	selectRepo: (repo) =>
-		set({ selectedRepo: repo, worktrees: [], selectedWorktree: null }),
-	setWorktrees: (worktrees) =>
 		set((s) => {
-			const repoPath = s.selectedRepo?.path;
-			const remembered = repoPath ? s.worktreeByRepo[repoPath] : undefined;
+			if (!repo) return { selectedRepo: null, selectedWorktree: null };
+			const remembered = s.worktreeByRepo[repo.path];
+			const wts = s.worktreesByRepo[repo.path] ?? [];
 			const match = remembered
-				? worktrees.find((wt) => wt.path === remembered)
+				? wts.find((wt) => wt.path === remembered)
 				: undefined;
-			return { worktrees, selectedWorktree: match ?? null };
+			return { selectedRepo: repo, selectedWorktree: match ?? null };
+		}),
+	setWorktreesByRepo: (worktreesByRepo) => set({ worktreesByRepo }),
+	setWorktreesForRepo: (repoPath, worktrees) =>
+		set((s) => {
+			const next = { ...s.worktreesByRepo, [repoPath]: worktrees };
+			let selectedWorktree = s.selectedWorktree;
+			if (
+				selectedWorktree &&
+				s.selectedRepo?.path === repoPath &&
+				!worktrees.find((wt) => wt.path === selectedWorktree!.path)
+			) {
+				selectedWorktree = null;
+			}
+			return { worktreesByRepo: next, selectedWorktree };
+		}),
+	removeWorktreesForRepo: (repoPath) =>
+		set((s) => {
+			const next = { ...s.worktreesByRepo };
+			delete next[repoPath];
+			const memory = { ...s.worktreeByRepo };
+			delete memory[repoPath];
+			return { worktreesByRepo: next, worktreeByRepo: memory };
 		}),
 	selectWorktree: (wt) =>
 		set((s) => {

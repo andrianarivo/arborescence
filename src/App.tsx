@@ -5,14 +5,19 @@ import { Terminal } from './components/Terminal';
 import { EmptyState } from './components/EmptyState';
 import { useAppStore } from './store/appStore';
 import { useConfig } from './hooks/useConfig';
+import { useWorktreeCache } from './hooks/useWorktreeCache';
 import './App.css';
 
 export default function App() {
 	const selectedWorktree = useAppStore((s) => s.selectedWorktree);
 	const { loadConfig } = useConfig();
+	const { bootstrap } = useWorktreeCache();
 
 	useEffect(() => {
-		loadConfig();
+		(async () => {
+			await loadConfig();
+			await bootstrap();
+		})();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
