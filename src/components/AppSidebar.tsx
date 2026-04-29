@@ -48,7 +48,7 @@ export function AppSidebar() {
 	};
 
 	return (
-		<Sidebar collapsible="none" className="pl-2">
+		<Sidebar collapsible="none">
 			<SidebarHeader className="flex-row items-center justify-between gap-1 px-4 py-3">
 				<span className="text-xs font-semibold tracking-wider text-muted-foreground">
 					REPOS
