@@ -5,6 +5,7 @@ import {
 	EyeOff,
 	Pencil,
 	Plus,
+	RefreshCw,
 	Trash2,
 	X,
 } from 'lucide-react';
@@ -24,6 +25,7 @@ import {
 import { useAppStore } from '../store/appStore';
 import { useConfig } from '../hooks/useConfig';
 import { useWorktrees } from '../hooks/useWorktrees';
+import { useWorktreeCache } from '../hooks/useWorktreeCache';
 import { ConfirmDialog } from './ConfirmDialog';
 import { NewWorktreeModal } from './NewWorktreeModal';
 import type { Repo, Worktree } from '../types';
@@ -55,6 +57,7 @@ export function RepoSidebarItem({ repo, onRequestRemove }: Props) {
 	} = useAppStore();
 	const { toggleHideRepo, setWorktreeLabel } = useConfig();
 	const { deleteWorktree, checkUnpushed } = useWorktrees();
+	const { refreshRepo } = useWorktreeCache();
 	const isOpen = selectedRepo?.path === repo.path;
 	const worktrees = worktreesByRepo[repo.path] ?? [];
 
@@ -62,6 +65,7 @@ export function RepoSidebarItem({ repo, onRequestRemove }: Props) {
 	const [wtToDelete, setWtToDelete] = useState<Worktree | null>(null);
 	const [unpushedCommits, setUnpushedCommits] = useState<string[]>([]);
 	const [deleting, setDeleting] = useState(false);
+	const [refreshing, setRefreshing] = useState(false);
 	const [renamingPath, setRenamingPath] = useState<string | null>(null);
 	const [draftLabel, setDraftLabel] = useState('');
 	const inputRef = useRef<HTMLInputElement>(null);
@@ -75,6 +79,16 @@ export function RepoSidebarItem({ repo, onRequestRemove }: Props) {
 
 	const handleToggle = (next: boolean) => {
 		selectRepo(next ? repo : null);
+	};
+
+	const handleRefresh = async () => {
+		if (refreshing) return;
+		setRefreshing(true);
+		try {
+			await refreshRepo(repo.path);
+		} finally {
+			setRefreshing(false);
+		}
 	};
 
 	const startRename = (wt: Worktree) => {
@@ -125,13 +139,25 @@ export function RepoSidebarItem({ repo, onRequestRemove }: Props) {
 			<SidebarMenuItem>
 				<CollapsibleTrigger asChild>
 					<SidebarMenuButton
-						className={`h-10 pr-16 ${repo.hidden ? 'opacity-50' : ''}`}
+						className={`h-10 pr-24 ${repo.hidden ? 'opacity-50' : ''}`}
 						tooltip={repo.name}
 					>
 						<ChevronRight className="size-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
 						<span className="truncate">{repo.name}</span>
 					</SidebarMenuButton>
 				</CollapsibleTrigger>
+				<SidebarMenuAction
+					showOnHover
+					className="right-16"
+					title="Rafraichir les worktrees"
+					disabled={refreshing}
+					onClick={(e) => {
+						e.stopPropagation();
+						handleRefresh();
+					}}
+				>
+					<RefreshCw className={refreshing ? 'animate-spin' : ''} />
+				</SidebarMenuAction>
 				<SidebarMenuAction
 					showOnHover
 					className="right-8"
