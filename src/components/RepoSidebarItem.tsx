@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import {
+	Check,
 	ChevronRight,
 	Eye,
 	EyeOff,
@@ -216,24 +217,55 @@ export function RepoSidebarItem({ repo, onRequestRemove }: Props) {
 													{wt.isMain ? '●' : ''}
 												</span>
 												{isRenaming ? (
-													<input
-														ref={inputRef}
-														className="flex-1 min-w-0 bg-background border border-ring rounded-sm px-1.5 py-0.5 text-xs outline-none"
-														value={draftLabel}
-														maxLength={50}
-														onChange={(e) => setDraftLabel(e.target.value)}
-														onClick={(e) => e.stopPropagation()}
-														onKeyDown={(e) => {
-															if (e.key === 'Enter') {
+													<>
+														<input
+															ref={inputRef}
+															className="flex-1 min-w-0 bg-background border border-ring rounded-sm px-1.5 py-0.5 text-xs outline-none"
+															value={draftLabel}
+															maxLength={50}
+															onChange={(e) => setDraftLabel(e.target.value)}
+															onClick={(e) => e.stopPropagation()}
+															onKeyDown={(e) => {
+																if (e.key === 'Enter') {
+																	e.preventDefault();
+																	e.stopPropagation();
+																	commitRename();
+																} else if (e.key === 'Escape') {
+																	e.preventDefault();
+																	e.stopPropagation();
+																	cancelRename();
+																}
+															}}
+														/>
+														<button
+															type="button"
+															className="text-muted-foreground hover:text-emerald-500 shrink-0"
+															title="Valider"
+															onMouseDown={(e) => {
 																e.preventDefault();
+																e.stopPropagation();
 																commitRename();
-															} else if (e.key === 'Escape') {
+															}}
+															onClick={(e) => {
 																e.preventDefault();
+																e.stopPropagation();
+															}}
+														>
+															<Check className="size-3.5" />
+														</button>
+														<button
+															type="button"
+															className="text-muted-foreground hover:text-destructive shrink-0"
+															title="Annuler"
+															onMouseDown={(e) => {
+																e.preventDefault();
+																e.stopPropagation();
 																cancelRename();
-															}
-														}}
-														onBlur={() => commitRename()}
-													/>
+															}}
+														>
+															<X className="size-3.5" />
+														</button>
+													</>
 												) : (
 													<div className="flex flex-col min-w-0 flex-1">
 														<span className="truncate text-sm">
@@ -246,9 +278,11 @@ export function RepoSidebarItem({ repo, onRequestRemove }: Props) {
 														)}
 													</div>
 												)}
-												<span className="text-[10px] text-muted-foreground ml-auto shrink-0">
-													{timeAgo(wt.lastActivity)}
-												</span>
+												{!isRenaming && (
+													<span className="text-[10px] text-muted-foreground ml-auto shrink-0">
+														{timeAgo(wt.lastActivity)}
+													</span>
+												)}
 												{!isRenaming && (
 													<button
 														type="button"
