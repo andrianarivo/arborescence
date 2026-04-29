@@ -130,7 +130,7 @@ export function RepoSidebarItem({ repo, onRequestRemove }: Props) {
 			open={isOpen}
 			onOpenChange={handleToggle}
 			asChild
-			className="group/collapsible"
+			className="group/collapsible border-b border-sidebar-border last:border-b-0"
 		>
 			<SidebarMenuItem>
 				<ContextMenu>
@@ -181,7 +181,7 @@ export function RepoSidebarItem({ repo, onRequestRemove }: Props) {
 														selectWorktree(wt);
 													}
 												}}
-												className="group/wt h-9 py-2 cursor-pointer data-[active=true]:border-l-2 data-[active=true]:border-primary"
+												className="group/wt h-9 py-2 cursor-pointer border-b border-b-sidebar-border last:border-b-0 data-[active=true]:border-l-2 data-[active=true]:border-l-primary"
 											>
 												<span
 													className={

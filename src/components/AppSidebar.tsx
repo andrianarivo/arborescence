@@ -65,7 +65,7 @@ export function AppSidebar() {
 			</SidebarHeader>
 			<SidebarContent>
 				<SidebarGroup>
-					<SidebarMenu className="gap-1">
+					<SidebarMenu>
 						{visibleRepos.map((repo) => (
 							<RepoSidebarItem
 								key={repo.path}
