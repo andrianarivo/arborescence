@@ -7,7 +7,6 @@ type AppStore = {
 	worktrees: Worktree[];
 	selectedWorktree: Worktree | null;
 	worktreeByRepo: Record<string, string>;
-	terminalHeight: number;
 	ptySessions: Record<string, string[]>;
 	activeTab: Record<string, number>;
 	showHidden: boolean;
@@ -18,7 +17,6 @@ type AppStore = {
 	selectRepo: (repo: Repo | null) => void;
 	setWorktrees: (wts: Worktree[]) => void;
 	selectWorktree: (wt: Worktree | null) => void;
-	setTerminalHeight: (h: number) => void;
 	registerPty: (worktreePath: string, sessionId: string) => void;
 	unregisterPty: (worktreePath: string, sessionId: string) => void;
 	setActiveTab: (worktreePath: string, index: number) => void;
@@ -30,7 +28,6 @@ export const useAppStore = create<AppStore>((set) => ({
 	worktrees: [],
 	selectedWorktree: null,
 	worktreeByRepo: {},
-	terminalHeight: 300,
 	ptySessions: {},
 	activeTab: {},
 	showHidden: false,
@@ -63,7 +60,6 @@ export const useAppStore = create<AppStore>((set) => ({
 			delete next[repoPath];
 			return { selectedWorktree: null, worktreeByRepo: next };
 		}),
-	setTerminalHeight: (h) => set({ terminalHeight: h }),
 	registerPty: (worktreePath, sessionId) =>
 		set((s) => {
 			const list = [...(s.ptySessions[worktreePath] || []), sessionId];

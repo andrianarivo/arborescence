@@ -167,81 +167,93 @@ export function RepoSidebarItem({ repo, onRequestRemove }: Props) {
 								const active = selectedWorktree?.path === wt.path;
 								return (
 									<SidebarMenuSubItem key={wt.path}>
-										<SidebarMenuSubButton
-											isActive={active}
-											onClick={() => !isRenaming && selectWorktree(wt)}
-											className="group/wt h-auto py-1.5"
-										>
-											<span
-												className={
-													wt.isMain
-														? 'text-emerald-500 text-xs'
-														: 'text-muted-foreground text-xs w-2'
-												}
-											>
-												{wt.isMain ? '●' : ''}
-											</span>
-											{isRenaming ? (
-												<input
-													ref={inputRef}
-													className="flex-1 min-w-0 bg-background border border-ring rounded-sm px-1.5 py-0.5 text-xs outline-none"
-													value={draftLabel}
-													maxLength={50}
-													onChange={(e) => setDraftLabel(e.target.value)}
-													onClick={(e) => e.stopPropagation()}
-													onKeyDown={(e) => {
-														if (e.key === 'Enter') {
-															e.preventDefault();
-															commitRename();
-														} else if (e.key === 'Escape') {
-															e.preventDefault();
-															cancelRename();
-														}
-													}}
-													onBlur={() => commitRename()}
-												/>
-											) : (
-												<div className="flex flex-col min-w-0 flex-1">
-													<span className="truncate text-sm">
-														{label ?? defaultName}
-													</span>
-													{label && (
-														<span className="truncate text-[10px] text-muted-foreground">
-															{defaultName}
-														</span>
-													)}
-												</div>
-											)}
-											<span className="text-[10px] text-muted-foreground ml-auto shrink-0">
-												{timeAgo(wt.lastActivity)}
-											</span>
-											{!isRenaming && (
-												<button
-													type="button"
-													className="opacity-0 group-hover/wt:opacity-100 hover:text-foreground text-muted-foreground"
-													title={
-														label ? 'Modifier le label' : 'Ajouter un label'
+										<SidebarMenuSubButton asChild isActive={active}>
+											<div
+												role="button"
+												tabIndex={0}
+												onClick={() => !isRenaming && selectWorktree(wt)}
+												onKeyDown={(e) => {
+													if (
+														(e.key === 'Enter' || e.key === ' ') &&
+														!isRenaming
+													) {
+														e.preventDefault();
+														selectWorktree(wt);
 													}
-													onClick={(e) => {
-														e.stopPropagation();
-														startRename(wt);
-													}}
+												}}
+												className="group/wt h-auto py-1.5 cursor-pointer"
+											>
+												<span
+													className={
+														wt.isMain
+															? 'text-emerald-500 text-xs'
+															: 'text-muted-foreground text-xs w-2'
+													}
 												>
-													<Pencil className="size-3" />
-												</button>
-											)}
-											{!wt.isMain && !isRenaming && (
-												<button
-													type="button"
-													className="opacity-0 group-hover/wt:opacity-100 text-muted-foreground hover:text-destructive"
-													onClick={(e) => {
-														e.stopPropagation();
-														handleDeleteRequest(wt);
-													}}
-												>
-													<X className="size-3.5" />
-												</button>
-											)}
+													{wt.isMain ? '●' : ''}
+												</span>
+												{isRenaming ? (
+													<input
+														ref={inputRef}
+														className="flex-1 min-w-0 bg-background border border-ring rounded-sm px-1.5 py-0.5 text-xs outline-none"
+														value={draftLabel}
+														maxLength={50}
+														onChange={(e) => setDraftLabel(e.target.value)}
+														onClick={(e) => e.stopPropagation()}
+														onKeyDown={(e) => {
+															if (e.key === 'Enter') {
+																e.preventDefault();
+																commitRename();
+															} else if (e.key === 'Escape') {
+																e.preventDefault();
+																cancelRename();
+															}
+														}}
+														onBlur={() => commitRename()}
+													/>
+												) : (
+													<div className="flex flex-col min-w-0 flex-1">
+														<span className="truncate text-sm">
+															{label ?? defaultName}
+														</span>
+														{label && (
+															<span className="truncate text-[10px] text-muted-foreground">
+																{defaultName}
+															</span>
+														)}
+													</div>
+												)}
+												<span className="text-[10px] text-muted-foreground ml-auto shrink-0">
+													{timeAgo(wt.lastActivity)}
+												</span>
+												{!isRenaming && (
+													<button
+														type="button"
+														className="opacity-0 group-hover/wt:opacity-100 hover:text-foreground text-muted-foreground"
+														title={
+															label ? 'Modifier le label' : 'Ajouter un label'
+														}
+														onClick={(e) => {
+															e.stopPropagation();
+															startRename(wt);
+														}}
+													>
+														<Pencil className="size-3" />
+													</button>
+												)}
+												{!wt.isMain && !isRenaming && (
+													<button
+														type="button"
+														className="opacity-0 group-hover/wt:opacity-100 text-muted-foreground hover:text-destructive"
+														onClick={(e) => {
+															e.stopPropagation();
+															handleDeleteRequest(wt);
+														}}
+													>
+														<X className="size-3.5" />
+													</button>
+												)}
+											</div>
 										</SidebarMenuSubButton>
 									</SidebarMenuSubItem>
 								);
