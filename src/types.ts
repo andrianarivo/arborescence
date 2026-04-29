@@ -7,6 +7,7 @@ export type Repo = {
 export type Config = {
 	repos: Repo[];
 	worktreeLabels: Record<string, string>;
+	sidebarWidth?: number;
 };
 
 export type Worktree = {

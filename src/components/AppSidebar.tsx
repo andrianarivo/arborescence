@@ -18,6 +18,7 @@ import { AddRepoModal } from './AddRepoModal';
 import { ConfirmDialog } from './ConfirmDialog';
 import ThemeToggle from './ThemeToggle';
 import { RepoSidebarItem } from './RepoSidebarItem';
+import { SidebarResizeHandle } from './SidebarResizeHandle';
 import type { Repo } from '../types';
 
 export function AppSidebar() {
@@ -48,7 +49,7 @@ export function AppSidebar() {
 	};
 
 	return (
-		<Sidebar collapsible="none">
+		<Sidebar collapsible="none" className="relative">
 			<SidebarHeader className="flex-row items-center justify-between gap-1 px-4 py-3">
 				<span className="text-xs font-semibold tracking-wider text-muted-foreground">
 					REPOS
@@ -99,6 +100,7 @@ export function AppSidebar() {
 					</SidebarMenuItem>
 				</SidebarMenu>
 			</SidebarFooter>
+			<SidebarResizeHandle />
 			{showAddModal && <AddRepoModal onClose={() => setShowAddModal(false)} />}
 			{repoToDelete && (
 				<ConfirmDialog

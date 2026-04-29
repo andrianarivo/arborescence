@@ -10,6 +10,7 @@ import './App.css';
 
 export default function App() {
 	const selectedWorktree = useAppStore((s) => s.selectedWorktree);
+	const sidebarWidth = useAppStore((s) => s.sidebarWidth);
 	const { loadConfig } = useConfig();
 	const { bootstrap } = useWorktreeCache();
 
@@ -22,7 +23,10 @@ export default function App() {
 	}, []);
 
 	return (
-		<SidebarProvider className="h-svh">
+		<SidebarProvider
+			className="h-svh"
+			style={{ '--sidebar-width': `${sidebarWidth}px` } as React.CSSProperties}
+		>
 			<AppSidebar />
 			<main className="flex flex-col flex-1 h-screen overflow-hidden">
 				{selectedWorktree ? <Terminal /> : <EmptyState />}

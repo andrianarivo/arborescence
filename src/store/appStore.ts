@@ -11,8 +11,10 @@ type AppStore = {
 	activeTab: Record<string, number>;
 	showHidden: boolean;
 	worktreeLabels: Record<string, string>;
+	sidebarWidth: number;
 	setRepos: (repos: Repo[]) => void;
 	setWorktreeLabels: (labels: Record<string, string>) => void;
+	setSidebarWidth: (width: number) => void;
 	toggleShowHidden: () => void;
 	selectRepo: (repo: Repo | null) => void;
 	setWorktreesByRepo: (cache: Record<string, Worktree[]>) => void;
@@ -34,8 +36,10 @@ export const useAppStore = create<AppStore>((set) => ({
 	activeTab: {},
 	showHidden: false,
 	worktreeLabels: {},
+	sidebarWidth: 256,
 	setRepos: (repos) => set({ repos }),
 	setWorktreeLabels: (worktreeLabels) => set({ worktreeLabels }),
+	setSidebarWidth: (sidebarWidth) => set({ sidebarWidth }),
 	toggleShowHidden: () => set((s) => ({ showHidden: !s.showHidden })),
 	selectRepo: (repo) =>
 		set((s) => {
