@@ -1,18 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { ChevronRight, Pencil, Plus, X } from 'lucide-react';
+import {
+	ChevronRight,
+	Eye,
+	EyeOff,
+	Pencil,
+	Plus,
+	Trash2,
+	X,
+} from 'lucide-react';
 import {
 	Collapsible,
 	CollapsibleContent,
 	CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import {
-	ContextMenu,
-	ContextMenuContent,
-	ContextMenuItem,
-	ContextMenuTrigger,
-} from '@/components/ui/context-menu';
-import {
+	SidebarMenuAction,
 	SidebarMenuButton,
 	SidebarMenuItem,
 	SidebarMenuSub,
@@ -133,30 +136,37 @@ export function RepoSidebarItem({ repo, onRequestRemove }: Props) {
 			className="group/collapsible border-b border-sidebar-border last:border-b-0"
 		>
 			<SidebarMenuItem>
-				<ContextMenu>
-					<ContextMenuTrigger asChild>
-						<CollapsibleTrigger asChild>
-							<SidebarMenuButton
-								className={`h-10 data-[state=open]:border-l-2 data-[state=open]:border-primary ${repo.hidden ? 'opacity-50' : ''}`}
-								tooltip={repo.name}
-							>
-								<ChevronRight className="size-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
-								<span className="truncate">{repo.name}</span>
-							</SidebarMenuButton>
-						</CollapsibleTrigger>
-					</ContextMenuTrigger>
-					<ContextMenuContent>
-						<ContextMenuItem onSelect={() => toggleHideRepo(repo.path)}>
-							{repo.hidden ? 'Afficher' : 'Cacher'}
-						</ContextMenuItem>
-						<ContextMenuItem
-							variant="destructive"
-							onSelect={() => onRequestRemove(repo)}
-						>
-							Retirer
-						</ContextMenuItem>
-					</ContextMenuContent>
-				</ContextMenu>
+				<CollapsibleTrigger asChild>
+					<SidebarMenuButton
+						className={`h-10 pr-16 ${repo.hidden ? 'opacity-50' : ''}`}
+						tooltip={repo.name}
+					>
+						<ChevronRight className="size-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+						<span className="truncate">{repo.name}</span>
+					</SidebarMenuButton>
+				</CollapsibleTrigger>
+				<SidebarMenuAction
+					showOnHover
+					className="right-8"
+					title={repo.hidden ? 'Afficher' : 'Cacher'}
+					onClick={(e) => {
+						e.stopPropagation();
+						toggleHideRepo(repo.path);
+					}}
+				>
+					{repo.hidden ? <Eye /> : <EyeOff />}
+				</SidebarMenuAction>
+				<SidebarMenuAction
+					showOnHover
+					title="Retirer"
+					className="hover:text-destructive"
+					onClick={(e) => {
+						e.stopPropagation();
+						onRequestRemove(repo);
+					}}
+				>
+					<Trash2 />
+				</SidebarMenuAction>
 				<CollapsibleContent>
 					<SidebarMenuSub>
 						{isOpen &&
