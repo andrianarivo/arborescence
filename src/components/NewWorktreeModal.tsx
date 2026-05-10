@@ -57,7 +57,9 @@ export function NewWorktreeModal({ onClose }: Props) {
 							placeholder="nom-de-branche"
 							autoFocus
 						/>
-						{error && <p className="text-[12px] text-[color:var(--danger)]">{error}</p>}
+						{error && (
+							<p className="text-[12px] text-[color:var(--danger)]">{error}</p>
+						)}
 					</div>
 					<DialogFooter>
 						<Button type="button" variant="secondary" onClick={onClose}>

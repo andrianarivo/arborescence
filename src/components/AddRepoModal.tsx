@@ -80,7 +80,9 @@ export function AddRepoModal({ onClose }: Props) {
 								Parcourir
 							</Button>
 						</div>
-						{error && <p className="text-[12px] text-[color:var(--danger)]">{error}</p>}
+						{error && (
+							<p className="text-[12px] text-[color:var(--danger)]">{error}</p>
+						)}
 					</div>
 					<DialogFooter>
 						<Button type="button" variant="secondary" onClick={onClose}>
