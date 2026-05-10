@@ -136,12 +136,17 @@ body {
 	width: 100%;
 }
 .terminal-canvas .xterm .xterm-viewport {
-	scrollbar-width: none;
-	overflow-y: scroll;
+	scrollbar-width: none !important;
+	-ms-overflow-style: none !important;
+	overflow-y: auto;
 	background-color: var(--terminal-bg) !important;
 }
-.terminal-canvas .xterm .xterm-viewport::-webkit-scrollbar {
-	display: none;
+.terminal-canvas .xterm .xterm-viewport::-webkit-scrollbar,
+.terminal-canvas .xterm .xterm-viewport::-webkit-scrollbar-thumb,
+.terminal-canvas .xterm .xterm-viewport::-webkit-scrollbar-track {
+	-webkit-appearance: none !important;
+	display: none !important;
 	width: 0 !important;
 	height: 0 !important;
+	background: transparent !important;
 }
