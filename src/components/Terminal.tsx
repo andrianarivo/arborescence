@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { Terminal as XTerm, type ITheme } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { Unicode11Addon } from '@xterm/addon-unicode11';
@@ -7,6 +7,7 @@ import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import '@xterm/xterm/css/xterm.css';
 import { useAppStore } from '../store/appStore';
 import { loadKeybindings, matchKeybinding } from '../lib/keybindings';
+import { ConfirmDialog } from './ConfirmDialog';
 
 type PtyOutput = {
 	session_id: string;
@@ -91,6 +92,7 @@ export function Terminal() {
 	const activeTab = useAppStore((s) => s.activeTab);
 	const containerRef = useRef<HTMLDivElement>(null);
 	const activeSessionRef = useRef<string | null>(null);
+	const [tabToClose, setTabToClose] = useState<string | null>(null);
 
 	const path = selectedWorktree?.path;
 	const tabs = path ? ptySessions[path] || [] : [];
@@ -279,7 +281,7 @@ export function Terminal() {
 								className="terminal-tab-close"
 								onClick={(e) => {
 									e.stopPropagation();
-									closeTab(sid);
+									setTabToClose(sid);
 								}}
 								aria-label={`Fermer terminal ${i + 1}`}
 							>
@@ -299,6 +301,18 @@ export function Terminal() {
 			<div className="terminal-container">
 				<div className="terminal-canvas" ref={containerRef} />
 			</div>
+			{tabToClose && (
+				<ConfirmDialog
+					title="Fermer ce terminal ?"
+					message="La session PTY associee sera terminee."
+					onConfirm={async () => {
+						const sid = tabToClose;
+						setTabToClose(null);
+						await closeTab(sid);
+					}}
+					onCancel={() => setTabToClose(null)}
+				/>
+			)}
 		</div>
 	);
 }
