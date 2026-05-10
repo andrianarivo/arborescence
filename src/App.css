@@ -1,6 +1,5 @@
 body {
-	font-family:
-		-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+	font-family: var(--font-sans);
 	overflow: hidden;
 	height: 100vh;
 }
@@ -14,47 +13,74 @@ body {
 	flex-direction: column;
 	flex: 1;
 	min-height: 0;
-	background: var(--card);
+	background: var(--terminal-bg);
 }
 
 .terminal-header {
-	padding: 0;
-	border-bottom: 1px solid var(--border);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 14px;
+	height: 38px;
+	background: var(--bg-overlay);
+	border-bottom: 1px solid var(--border-subtle);
+}
+
+.terminal-breadcrumb {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-family: var(--font-mono);
+	font-size: 11px;
+	color: var(--text-tertiary);
+}
+.terminal-breadcrumb .sep {
+	color: var(--border-default);
+}
+.terminal-breadcrumb .current {
+	color: var(--text-primary);
 }
 
 .terminal-tabs {
 	display: flex;
 	align-items: center;
+	gap: 2px;
 	overflow-x: auto;
 }
 
 .terminal-tab {
-	display: flex;
+	display: inline-flex;
 	align-items: center;
 	gap: 6px;
-	padding: 8px 12px;
-	font-size: 11px;
-	font-weight: 600;
-	color: var(--muted-foreground);
+	height: 26px;
+	padding: 0 10px;
+	font-family: var(--font-sans);
+	font-size: 11.5px;
+	font-weight: 500;
+	color: var(--text-muted);
 	cursor: pointer;
-	border-right: 1px solid var(--border);
-	transition: background 0.15s;
+	border-radius: 6px;
+	transition:
+		background 0.15s cubic-bezier(0.2, 0, 0, 1),
+		color 0.15s cubic-bezier(0.2, 0, 0, 1);
 	user-select: none;
 }
 
 .terminal-tab:hover {
-	background: var(--muted);
+	background: var(--bg-hover);
+	color: var(--text-primary);
 }
 
 .terminal-tab.active {
-	color: var(--foreground);
-	background: var(--background);
+	color: var(--text-primary);
+	background: var(--bg-active);
 }
 
 .terminal-tab-close {
 	background: none;
 	border: none;
-	color: var(--muted-foreground);
+	color: inherit;
+	opacity: 0.5;
 	font-size: 13px;
 	cursor: pointer;
 	padding: 0 2px;
@@ -63,26 +89,30 @@ body {
 }
 
 .terminal-tab-close:hover {
-	color: var(--destructive);
-	background: rgba(231, 76, 60, 0.1);
+	color: var(--danger);
+	opacity: 1;
 }
 
 .terminal-tab-add {
 	background: none;
 	border: none;
-	color: var(--muted-foreground);
-	font-size: 15px;
+	color: var(--text-tertiary);
+	font-size: 14px;
 	cursor: pointer;
-	padding: 6px 12px;
-	transition: color 0.15s;
+	padding: 4px 10px;
+	border-radius: 6px;
+	transition:
+		color 0.15s,
+		background 0.15s;
 }
 
 .terminal-tab-add:hover {
-	color: var(--primary);
+	color: var(--text-primary);
+	background: var(--bg-hover);
 }
 
 .terminal-container {
 	flex: 1;
-	padding: 4px;
+	padding: 16px 20px;
 	overflow: hidden;
 }
