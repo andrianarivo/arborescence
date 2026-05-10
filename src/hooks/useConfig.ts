@@ -3,48 +3,26 @@ import { useAppStore } from '../store/appStore';
 import type { Config, Repo } from '../types';
 
 export function useConfig() {
-	const {
-		repos,
-		setRepos,
-		worktreeLabels,
-		setWorktreeLabels,
-		setSidebarWidth,
-	} = useAppStore();
+	const { repos, setRepos, worktreeLabels, setWorktreeLabels } = useAppStore();
 
 	const loadConfig = async () => {
 		const config = await invoke<Config>('read_config');
 		setRepos(config.repos ?? []);
 		setWorktreeLabels(config.worktreeLabels ?? {});
-		if (typeof config.sidebarWidth === 'number') {
-			setSidebarWidth(config.sidebarWidth);
-		}
 	};
 
 	const persist = async (
 		updatedRepos: Repo[],
 		updatedLabels: Record<string, string>,
 	) => {
-		const { sidebarWidth } = useAppStore.getState();
 		await invoke('write_config', {
 			config: {
 				repos: updatedRepos,
 				worktreeLabels: updatedLabels,
-				sidebarWidth,
 			},
 		});
 		setRepos(updatedRepos);
 		setWorktreeLabels(updatedLabels);
-	};
-
-	const persistSidebarWidth = async () => {
-		const {
-			repos: r,
-			worktreeLabels: l,
-			sidebarWidth,
-		} = useAppStore.getState();
-		await invoke('write_config', {
-			config: { repos: r, worktreeLabels: l, sidebarWidth },
-		});
 	};
 
 	const addRepo = async (repo: Repo) => {
@@ -90,6 +68,5 @@ export function useConfig() {
 		toggleHideRepo,
 		setWorktreeLabel,
 		removeWorktreeLabel,
-		persistSidebarWidth,
 	};
 }

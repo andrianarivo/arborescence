@@ -1,5 +1,4 @@
 import { useAppStore } from '../store/appStore';
-import { useConfig } from '../hooks/useConfig';
 
 const MIN_WIDTH = 128;
 const MAX_WIDTH = 480;
@@ -8,7 +7,6 @@ const clamp = (n: number) => Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, n));
 
 export function SidebarResizeHandle() {
 	const setSidebarWidth = useAppStore((s) => s.setSidebarWidth);
-	const { persistSidebarWidth } = useConfig();
 
 	const onPointerDown = (e: React.PointerEvent) => {
 		e.preventDefault();
@@ -27,7 +25,6 @@ export function SidebarResizeHandle() {
 			document.removeEventListener('pointerup', onUp);
 			document.body.style.cursor = prevCursor;
 			document.body.style.userSelect = prevSelect;
-			void persistSidebarWidth();
 		};
 		document.addEventListener('pointermove', onMove);
 		document.addEventListener('pointerup', onUp);

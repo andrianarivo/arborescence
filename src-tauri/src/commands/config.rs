@@ -17,8 +17,6 @@ pub struct Config {
     pub repos: Vec<Repo>,
     #[serde(default, rename = "worktreeLabels")]
     pub worktree_labels: HashMap<String, String>,
-    #[serde(default, rename = "sidebarWidth", skip_serializing_if = "Option::is_none")]
-    pub sidebar_width: Option<u32>,
 }
 
 fn config_path() -> Result<PathBuf, String> {

@@ -36,7 +36,7 @@ export const useAppStore = create<AppStore>((set) => ({
 	activeTab: {},
 	showHidden: false,
 	worktreeLabels: {},
-	sidebarWidth: 128,
+	sidebarWidth: 310,
 	setRepos: (repos) => set({ repos }),
 	setWorktreeLabels: (worktreeLabels) => set({ worktreeLabels }),
 	setSidebarWidth: (sidebarWidth) => set({ sidebarWidth }),
