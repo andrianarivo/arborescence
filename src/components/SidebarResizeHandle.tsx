@@ -38,7 +38,7 @@ export function SidebarResizeHandle() {
 			role="separator"
 			aria-orientation="vertical"
 			onPointerDown={onPointerDown}
-			className="absolute top-0 right-0 bottom-0 z-20 w-1 cursor-col-resize bg-transparent transition-colors hover:bg-primary/40"
+			className="absolute top-0 right-0 bottom-0 z-20 w-1 cursor-col-resize bg-transparent transition-colors hover:bg-[color:var(--accent)]/40"
 		/>
 	);
 }
