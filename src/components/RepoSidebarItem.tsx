@@ -142,7 +142,7 @@ export function RepoSidebarItem({ repo, onRequestRemove }: Props) {
 			<SidebarMenuItem>
 				<CollapsibleTrigger asChild>
 					<SidebarMenuButton
-						className={`h-7 px-2 pr-24 rounded-md text-[13px] font-medium tracking-[-0.01em] hover:bg-[color:var(--bg-hover)] data-[state=open]:bg-[color:var(--bg-hover)] ${repo.hidden ? 'opacity-50' : ''}`}
+						className={`h-8 px-2.5 pr-24 rounded-md text-[13px] font-medium tracking-[-0.01em] hover:bg-[color:var(--bg-hover)] data-[state=open]:bg-[color:var(--bg-hover)] ${repo.hidden ? 'opacity-50' : ''}`}
 						tooltip={repo.name}
 					>
 						<ChevronRight className="size-3.5 text-[color:var(--text-muted)] transition-transform group-data-[state=open]/collapsible:rotate-90" />
@@ -191,7 +191,7 @@ export function RepoSidebarItem({ repo, onRequestRemove }: Props) {
 					<Trash2 />
 				</SidebarMenuAction>
 				<CollapsibleContent>
-					<SidebarMenuSub className="mx-0 px-0 border-l-0 gap-px py-1">
+					<SidebarMenuSub className="mx-0 px-0 border-l-0 gap-0.5 py-1.5">
 						{isOpen &&
 							worktrees.map((wt) => {
 								const label = worktreeLabels[wt.path];
@@ -214,7 +214,7 @@ export function RepoSidebarItem({ repo, onRequestRemove }: Props) {
 													selectWorktree(wt);
 												}
 											}}
-											className="group/wt flex items-center gap-2 h-7 pl-6 pr-2 cursor-pointer rounded-md transition-colors hover:bg-[color:var(--bg-hover)] data-[active=true]:bg-[linear-gradient(90deg,var(--accent-bg-soft),var(--accent-bg-faint))] data-[active=true]:shadow-[inset_2px_0_0_var(--accent)]"
+											className="group/wt flex items-center gap-2 h-7 pl-5 pr-2.5 cursor-pointer rounded-md transition-colors hover:bg-[color:var(--bg-hover)] data-[active=true]:bg-[linear-gradient(90deg,var(--accent-bg-soft),var(--accent-bg-faint))] data-[active=true]:shadow-[inset_2px_0_0_var(--accent)]"
 										>
 											<span
 												className="size-2 inline-flex items-center justify-center text-[11px]"
@@ -340,7 +340,7 @@ export function RepoSidebarItem({ repo, onRequestRemove }: Props) {
 								<button
 									type="button"
 									onClick={() => setShowNewWorktree(true)}
-									className="w-full flex items-center gap-2 pl-6 pr-2 h-7 rounded-md text-[11.5px] text-[color:var(--text-muted)] hover:bg-[color:var(--bg-hover)] hover:text-[color:var(--text-primary)] transition-colors"
+									className="w-full flex items-center gap-2 pl-5 pr-2.5 h-7 mt-0.5 rounded-md text-[11.5px] text-[color:var(--text-muted)] hover:bg-[color:var(--bg-hover)] hover:text-[color:var(--text-primary)] transition-colors"
 								>
 									<Plus className="size-3" />
 									<span>Nouveau worktree</span>

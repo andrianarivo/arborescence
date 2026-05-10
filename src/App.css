@@ -113,6 +113,23 @@ body {
 
 .terminal-container {
 	flex: 1;
-	padding: 16px 20px;
+	padding: 8px 0 0 12px;
 	overflow: hidden;
+	min-width: 0;
+}
+
+/* xterm.js viewport — cache la scrollbar et son offset */
+.terminal-container .xterm {
+	height: 100%;
+	width: 100%;
+}
+.terminal-container .xterm .xterm-viewport {
+	scrollbar-width: none;
+	overflow-y: scroll;
+	background-color: var(--terminal-bg) !important;
+}
+.terminal-container .xterm .xterm-viewport::-webkit-scrollbar {
+	display: none;
+	width: 0 !important;
+	height: 0 !important;
 }

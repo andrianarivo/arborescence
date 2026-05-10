@@ -65,8 +65,8 @@ export function AppSidebar() {
 			</SidebarHeader>
 
 			<SidebarContent>
-				<SidebarGroup className="px-2 pt-3">
-					<div className="flex items-center justify-between px-2 pb-1">
+				<SidebarGroup className="px-3 pt-3 gap-1">
+					<div className="flex items-center justify-between px-2 pb-1.5">
 						<span className="font-mono text-[9.5px] tracking-[0.06em] uppercase text-[color:var(--text-faint)]">
 							Repos
 						</span>
@@ -95,11 +95,11 @@ export function AppSidebar() {
 								onRequestRemove={setRepoToDelete}
 							/>
 						))}
-						<li className="mt-1">
+						<li className="mt-2">
 							<button
 								type="button"
 								onClick={() => setShowAddModal(true)}
-								className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] text-[color:var(--text-tertiary)] hover:bg-[color:var(--bg-hover)] hover:text-[color:var(--text-primary)] transition-colors"
+								className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[12px] text-[color:var(--text-tertiary)] hover:bg-[color:var(--bg-hover)] hover:text-[color:var(--text-primary)] transition-colors"
 							>
 								<Plus className="size-3.5" />
 								<span>Ajouter un repo</span>
