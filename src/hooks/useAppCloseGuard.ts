@@ -43,7 +43,12 @@ export function useAppCloseGuard() {
 		await Promise.allSettled(
 			allSids.map((sessionId) => invoke('kill_pty', { sessionId })),
 		);
-		await getCurrentWindow().destroy();
+		try {
+			await getCurrentWindow().destroy();
+		} catch (err) {
+			console.error('Failed to destroy window after PTY cleanup:', err);
+			setState({ confirming: false, sessionCount: 0 });
+		}
 	};
 
 	return { ...state, cancel, confirm };
