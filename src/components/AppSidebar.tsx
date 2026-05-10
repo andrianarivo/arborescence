@@ -16,7 +16,6 @@ import { useConfig } from '../hooks/useConfig';
 import { useWorktreeCache } from '../hooks/useWorktreeCache';
 import { AddRepoModal } from './AddRepoModal';
 import { ConfirmDialog } from './ConfirmDialog';
-import ThemeToggle from './ThemeToggle';
 import { RepoSidebarItem } from './RepoSidebarItem';
 import { SidebarResizeHandle } from './SidebarResizeHandle';
 import type { Repo } from '../types';
@@ -55,7 +54,6 @@ export function AppSidebar() {
 					REPOS
 				</span>
 				<div className="flex items-center gap-1">
-					<ThemeToggle />
 					<Button
 						variant="ghost"
 						size="icon"
