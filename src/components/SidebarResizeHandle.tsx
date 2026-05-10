@@ -1,7 +1,7 @@
 import { useAppStore } from '../store/appStore';
 import { useConfig } from '../hooks/useConfig';
 
-const MIN_WIDTH = 192;
+const MIN_WIDTH = 128;
 const MAX_WIDTH = 480;
 
 const clamp = (n: number) => Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, n));
