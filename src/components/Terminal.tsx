@@ -32,22 +32,6 @@ const TERMINAL_THEME: ITheme = {
 	cursor: '#5E6AFF',
 	cursorAccent: '#08080F',
 	selectionBackground: 'rgba(94, 106, 255, 0.25)',
-	black: '#06060C',
-	red: '#FF5F57',
-	green: '#28C840',
-	yellow: '#F5A524',
-	blue: '#4D88FF',
-	magenta: '#B16BFF',
-	cyan: '#5EE5E5',
-	white: '#C8C8E0',
-	brightBlack: '#4A4A66',
-	brightRed: '#FF8A85',
-	brightGreen: '#5BD96E',
-	brightYellow: '#FFB94A',
-	brightBlue: '#79A6FF',
-	brightMagenta: '#C28FFF',
-	brightCyan: '#80EBEB',
-	brightWhite: '#FFFFFF',
 };
 
 const MIN_CONTRAST_RATIO = 0;
