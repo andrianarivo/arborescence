@@ -6,6 +6,7 @@ import { useWorktreeCache } from '../hooks/useWorktreeCache';
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
@@ -59,6 +60,9 @@ export function AddRepoModal({ onClose }: Props) {
 				<form onSubmit={handleSubmit}>
 					<DialogHeader>
 						<DialogTitle>Ajouter un repo</DialogTitle>
+						<DialogDescription>
+							Selectionnez le dossier racine d'un depot git existant.
+						</DialogDescription>
 					</DialogHeader>
 					<div className="grid gap-2 py-4">
 						<Label htmlFor="repo-path">Dossier</Label>
@@ -76,7 +80,7 @@ export function AddRepoModal({ onClose }: Props) {
 								Parcourir
 							</Button>
 						</div>
-						{error && <p className="text-xs text-destructive">{error}</p>}
+						{error && <p className="text-[12px] text-[color:var(--danger)]">{error}</p>}
 					</div>
 					<DialogFooter>
 						<Button type="button" variant="secondary" onClick={onClose}>

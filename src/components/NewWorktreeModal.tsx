@@ -3,6 +3,7 @@ import { useWorktrees } from '../hooks/useWorktrees';
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
@@ -42,6 +43,9 @@ export function NewWorktreeModal({ onClose }: Props) {
 				<form onSubmit={handleSubmit}>
 					<DialogHeader>
 						<DialogTitle>Nouveau worktree</DialogTitle>
+						<DialogDescription>
+							Cree un nouveau worktree git base sur la branche indiquee.
+						</DialogDescription>
 					</DialogHeader>
 					<div className="grid gap-2 py-4">
 						<Label htmlFor="worktree-branch">Branche</Label>
@@ -53,7 +57,7 @@ export function NewWorktreeModal({ onClose }: Props) {
 							placeholder="nom-de-branche"
 							autoFocus
 						/>
-						{error && <p className="text-xs text-destructive">{error}</p>}
+						{error && <p className="text-[12px] text-[color:var(--danger)]">{error}</p>}
 					</div>
 					<DialogFooter>
 						<Button type="button" variant="secondary" onClick={onClose}>

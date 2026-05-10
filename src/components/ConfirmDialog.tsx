@@ -40,7 +40,7 @@ export function ConfirmDialog({
 					<DialogDescription>{message}</DialogDescription>
 				</DialogHeader>
 				{details && details.length > 0 && (
-					<ul className="max-h-32 overflow-y-auto pl-5 text-xs text-muted-foreground list-disc">
+					<ul className="max-h-32 overflow-y-auto pl-5 font-mono text-[11px] text-[color:var(--text-muted)] list-disc">
 						{details.map((d, i) => (
 							<li key={i}>{d}</li>
 						))}
