@@ -20,7 +20,6 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 	SidebarMenuSub,
-	SidebarMenuSubButton,
 	SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 import { useAppStore } from '../store/appStore';
@@ -35,6 +34,7 @@ function timeAgo(isoDate: string): string {
 	if (!isoDate) return '';
 	const diff = Date.now() - new Date(isoDate).getTime();
 	const minutes = Math.floor(diff / 60000);
+	if (minutes < 1) return 'now';
 	if (minutes < 60) return `${minutes}m`;
 	const hours = Math.floor(minutes / 60);
 	if (hours < 24) return `${hours}h`;
@@ -130,26 +130,35 @@ export function RepoSidebarItem({ repo, onRequestRemove }: Props) {
 		}
 	};
 
+	const wtCount = worktrees.length;
+
 	return (
 		<Collapsible
 			open={isOpen}
 			onOpenChange={handleToggle}
 			asChild
-			className="group/collapsible border-b border-sidebar-border last:border-b-0"
+			className="group/collapsible"
 		>
 			<SidebarMenuItem>
 				<CollapsibleTrigger asChild>
 					<SidebarMenuButton
-						className={`h-10 pr-24 ${repo.hidden ? 'opacity-50' : ''}`}
+						className={`h-7 px-2 pr-24 rounded-md text-[13px] font-medium tracking-[-0.01em] hover:bg-[color:var(--bg-hover)] data-[state=open]:bg-[color:var(--bg-hover)] ${repo.hidden ? 'opacity-50' : ''}`}
 						tooltip={repo.name}
 					>
-						<ChevronRight className="size-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
-						<span className="truncate">{repo.name}</span>
+						<ChevronRight className="size-3.5 text-[color:var(--text-muted)] transition-transform group-data-[state=open]/collapsible:rotate-90" />
+						<span className="truncate text-[color:var(--text-secondary)] group-data-[state=open]/collapsible:text-[color:var(--text-primary)]">
+							{repo.name}
+						</span>
+						{wtCount > 0 && (
+							<span className="ml-auto font-mono text-[10px] text-[color:var(--text-muted)] tabular-nums px-1.5 py-px rounded-full bg-[color:var(--bg-active)]">
+								{wtCount}
+							</span>
+						)}
 					</SidebarMenuButton>
 				</CollapsibleTrigger>
 				<SidebarMenuAction
 					showOnHover
-					className="right-16"
+					className="right-16 text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]"
 					title="Rafraichir les worktrees"
 					disabled={refreshing}
 					onClick={(e) => {
@@ -161,7 +170,7 @@ export function RepoSidebarItem({ repo, onRequestRemove }: Props) {
 				</SidebarMenuAction>
 				<SidebarMenuAction
 					showOnHover
-					className="right-8"
+					className="right-8 text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]"
 					title={repo.hidden ? 'Afficher' : 'Cacher'}
 					onClick={(e) => {
 						e.stopPropagation();
@@ -173,7 +182,7 @@ export function RepoSidebarItem({ repo, onRequestRemove }: Props) {
 				<SidebarMenuAction
 					showOnHover
 					title="Retirer"
-					className="hover:text-destructive"
+					className="text-[color:var(--text-muted)] hover:text-[color:var(--danger)]"
 					onClick={(e) => {
 						e.stopPropagation();
 						onRequestRemove(repo);
@@ -182,7 +191,7 @@ export function RepoSidebarItem({ repo, onRequestRemove }: Props) {
 					<Trash2 />
 				</SidebarMenuAction>
 				<CollapsibleContent>
-					<SidebarMenuSub>
+					<SidebarMenuSub className="mx-0 px-0 border-l-0 gap-px py-1">
 						{isOpen &&
 							worktrees.map((wt) => {
 								const label = worktreeLabels[wt.path];
@@ -191,139 +200,151 @@ export function RepoSidebarItem({ repo, onRequestRemove }: Props) {
 								const active = selectedWorktree?.path === wt.path;
 								return (
 									<SidebarMenuSubItem key={wt.path}>
-										<SidebarMenuSubButton asChild isActive={active}>
-											<div
-												role="button"
-												tabIndex={0}
-												onClick={() => !isRenaming && selectWorktree(wt)}
-												onKeyDown={(e) => {
-													if (
-														(e.key === 'Enter' || e.key === ' ') &&
-														!isRenaming
-													) {
-														e.preventDefault();
-														selectWorktree(wt);
-													}
+										<div
+											role="button"
+											tabIndex={0}
+											data-active={active}
+											onClick={() => !isRenaming && selectWorktree(wt)}
+											onKeyDown={(e) => {
+												if (
+													(e.key === 'Enter' || e.key === ' ') &&
+													!isRenaming
+												) {
+													e.preventDefault();
+													selectWorktree(wt);
+												}
+											}}
+											className="group/wt flex items-center gap-2 h-7 pl-6 pr-2 cursor-pointer rounded-md transition-colors hover:bg-[color:var(--bg-hover)] data-[active=true]:bg-[linear-gradient(90deg,var(--accent-bg-soft),var(--accent-bg-faint))] data-[active=true]:shadow-[inset_2px_0_0_var(--accent)]"
+										>
+											<span
+												className="size-2 inline-flex items-center justify-center text-[11px]"
+												style={{
+													color: active
+														? 'var(--accent)'
+														: wt.isMain
+															? 'var(--success)'
+															: 'var(--text-faint)',
 												}}
-												className="group/wt h-9 py-2 cursor-pointer border-b border-b-sidebar-border last:border-b-0 data-[active=true]:border-l-2 data-[active=true]:border-l-primary"
 											>
-												<span
-													className={
-														wt.isMain
-															? 'text-emerald-500 text-xs'
-															: 'text-muted-foreground text-xs w-2'
-													}
-												>
-													{wt.isMain ? '●' : ''}
-												</span>
-												{isRenaming ? (
-													<>
-														<input
-															ref={inputRef}
-															className="flex-1 min-w-0 bg-background border border-ring rounded-sm px-1.5 py-0.5 text-xs outline-none"
-															value={draftLabel}
-															maxLength={50}
-															onChange={(e) => setDraftLabel(e.target.value)}
-															onClick={(e) => e.stopPropagation()}
-															onKeyDown={(e) => {
-																if (e.key === 'Enter') {
-																	e.preventDefault();
-																	e.stopPropagation();
-																	commitRename();
-																} else if (e.key === 'Escape') {
-																	e.preventDefault();
-																	e.stopPropagation();
-																	cancelRename();
-																}
-															}}
-														/>
-														<button
-															type="button"
-															className="text-muted-foreground hover:text-emerald-500 shrink-0"
-															title="Valider"
-															onMouseDown={(e) => {
+												{wt.isMain || active ? '●' : '○'}
+											</span>
+											{isRenaming ? (
+												<>
+													<input
+														ref={inputRef}
+														className="flex-1 min-w-0 bg-[color:var(--bg-overlay)] border border-[color:var(--border-strong)] rounded-sm px-1.5 py-0.5 text-[12px] text-[color:var(--text-primary)] outline-none focus:border-[color:var(--accent)]"
+														value={draftLabel}
+														maxLength={50}
+														onChange={(e) => setDraftLabel(e.target.value)}
+														onClick={(e) => e.stopPropagation()}
+														onKeyDown={(e) => {
+															if (e.key === 'Enter') {
 																e.preventDefault();
 																e.stopPropagation();
 																commitRename();
-															}}
-															onClick={(e) => {
-																e.preventDefault();
-																e.stopPropagation();
-															}}
-														>
-															<Check className="size-3.5" />
-														</button>
-														<button
-															type="button"
-															className="text-muted-foreground hover:text-destructive shrink-0"
-															title="Annuler"
-															onMouseDown={(e) => {
+															} else if (e.key === 'Escape') {
 																e.preventDefault();
 																e.stopPropagation();
 																cancelRename();
-															}}
-														>
-															<X className="size-3.5" />
-														</button>
-													</>
-												) : (
-													<div className="flex flex-col min-w-0 flex-1">
-														<span className="truncate text-sm">
-															{label ?? defaultName}
-														</span>
-														{label && (
-															<span className="truncate text-[10px] text-muted-foreground">
-																{defaultName}
-															</span>
-														)}
-													</div>
-												)}
-												{!isRenaming && (
-													<span className="text-[10px] text-muted-foreground ml-auto shrink-0">
-														{timeAgo(wt.lastActivity)}
-													</span>
-												)}
-												{!isRenaming && (
+															}
+														}}
+													/>
 													<button
 														type="button"
-														className="opacity-0 group-hover/wt:opacity-100 hover:text-foreground text-muted-foreground"
-														title={
-															label ? 'Modifier le label' : 'Ajouter un label'
-														}
-														onClick={(e) => {
+														className="text-[color:var(--text-muted)] hover:text-[color:var(--success)] shrink-0"
+														title="Valider"
+														onMouseDown={(e) => {
+															e.preventDefault();
 															e.stopPropagation();
-															startRename(wt);
+															commitRename();
+														}}
+														onClick={(e) => {
+															e.preventDefault();
+															e.stopPropagation();
 														}}
 													>
-														<Pencil className="size-3" />
+														<Check className="size-3.5" />
 													</button>
-												)}
-												{!wt.isMain && !isRenaming && (
 													<button
 														type="button"
-														className="opacity-0 group-hover/wt:opacity-100 text-muted-foreground hover:text-destructive"
-														onClick={(e) => {
+														className="text-[color:var(--text-muted)] hover:text-[color:var(--danger)] shrink-0"
+														title="Annuler"
+														onMouseDown={(e) => {
+															e.preventDefault();
 															e.stopPropagation();
-															handleDeleteRequest(wt);
+															cancelRename();
 														}}
 													>
 														<X className="size-3.5" />
 													</button>
-												)}
-											</div>
-										</SidebarMenuSubButton>
+												</>
+											) : (
+												<div className="flex flex-col min-w-0 flex-1">
+													<span
+														className="truncate text-[12.5px] tracking-[-0.01em]"
+														style={{
+															color: active
+																? 'var(--text-primary)'
+																: 'var(--text-secondary)',
+															fontWeight: active ? 500 : 400,
+														}}
+													>
+														{label ?? defaultName}
+													</span>
+													{label && (
+														<span className="truncate font-mono text-[10px] text-[color:var(--text-faint)]">
+															{defaultName}
+														</span>
+													)}
+												</div>
+											)}
+											{!isRenaming && (
+												<span className="font-mono text-[10px] text-[color:var(--text-faint)] ml-auto shrink-0 tabular-nums">
+													{timeAgo(wt.lastActivity)}
+												</span>
+											)}
+											{!isRenaming && (
+												<button
+													type="button"
+													className="opacity-0 group-hover/wt:opacity-100 text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] transition-opacity"
+													title={
+														label ? 'Modifier le label' : 'Ajouter un label'
+													}
+													onClick={(e) => {
+														e.stopPropagation();
+														startRename(wt);
+													}}
+												>
+													<Pencil className="size-3" />
+												</button>
+											)}
+											{!wt.isMain && !isRenaming && (
+												<button
+													type="button"
+													className="opacity-0 group-hover/wt:opacity-100 text-[color:var(--text-muted)] hover:text-[color:var(--danger)] transition-opacity"
+													onClick={(e) => {
+														e.stopPropagation();
+														handleDeleteRequest(wt);
+													}}
+													aria-label="Supprimer le worktree"
+												>
+													<X className="size-3.5" />
+												</button>
+											)}
+										</div>
 									</SidebarMenuSubItem>
 								);
 							})}
 						{isOpen && (
 							<SidebarMenuSubItem>
-								<SidebarMenuSubButton
+								<button
+									type="button"
 									onClick={() => setShowNewWorktree(true)}
-									className="h-9 text-muted-foreground"
+									className="w-full flex items-center gap-2 pl-6 pr-2 h-7 rounded-md text-[11.5px] text-[color:var(--text-muted)] hover:bg-[color:var(--bg-hover)] hover:text-[color:var(--text-primary)] transition-colors"
 								>
-									<Plus className="size-3.5" />
-									<span>New worktree</span>
-								</SidebarMenuSubButton>
+									<Plus className="size-3" />
+									<span>Nouveau worktree</span>
+								</button>
 							</SidebarMenuSubItem>
 						)}
 					</SidebarMenuSub>
