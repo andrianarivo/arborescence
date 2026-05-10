@@ -250,11 +250,9 @@ export function Terminal() {
 
 	if (!selectedWorktree) {
 		return (
-			<div
-				className="terminal-panel"
-				style={{ display: 'none' }}
-				ref={containerRef}
-			/>
+			<div className="terminal-panel" style={{ display: 'none' }}>
+				<div className="terminal-canvas" ref={containerRef} />
+			</div>
 		);
 	}
 
@@ -298,7 +296,9 @@ export function Terminal() {
 					</button>
 				</div>
 			</div>
-			<div className="terminal-container" ref={containerRef} />
+			<div className="terminal-container">
+				<div className="terminal-canvas" ref={containerRef} />
+			</div>
 		</div>
 	);
 }
